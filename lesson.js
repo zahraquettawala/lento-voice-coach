@@ -8,11 +8,11 @@ import { sectionExercise } from "./song.js";
 export const SECTIONS = ["Warm-up", "Scales", "Song", "Cooldown"];
 
 export const MOODS = {
-  tired: { label: "A bit tired", emoji: "😴", line: "Let's go easy today. Lots of gentle warm-ups, nothing too high.",
+  tired: { label: "A bit tired", hint: "Gentle warm-ups, nothing too high", line: "Let's go easy today. Lots of gentle warm-ups, nothing too high.",
     warmups: 3, scales: 1, climb: -3, speed: 0.9, gentleOnly: true },
-  okay: { label: "Pretty good", emoji: "🙂", line: "Nice. A normal lesson today: warm up, some scales, then your song.",
+  okay: { label: "Pretty good", hint: "A full lesson", line: "Nice. A normal lesson today: warm up, some scales, then your song.",
     warmups: 2, scales: 2, climb: 0, speed: 1, maxPower: 1 },
-  great: { label: "Ready to sing", emoji: "✨", line: "Love that energy. We'll stretch your range a little and do some fast runs.",
+  great: { label: "Ready to sing", hint: "Wider range and fast runs", line: "Love that energy. We'll stretch your range a little and do some fast runs.",
     warmups: 2, scales: 2, climb: 2, speed: 1.05, minPower: 1 },
 };
 

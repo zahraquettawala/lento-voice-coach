@@ -2,104 +2,49 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("lentoTheme")||"neutral"}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Lento">
-<meta name="theme-color" content="#f7f3ef">
+<meta name="theme-color" content="#f6f5f2">
 <title>Lento · Vocal coach</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="theme.css">
 <link rel="icon" href="sloth.svg">
-<link rel="apple-touch-icon" href="sloth.svg">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
-  .top { display: flex; align-items: center; justify-content: space-between; }
-  .brand { font-family: var(--serif); font-size: 18px; font-weight: 600; letter-spacing: .01em; display: flex; align-items: baseline; gap: 8px; }
-  .brand .tag { font-family: var(--sans); font-size: 12px; font-weight: 500; color: var(--ink-3); letter-spacing: 0; }
-  .meet { display: flex; gap: 14px; padding: 16px; align-items: flex-start; }
-  .meet .avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--accent-soft); overflow: hidden; flex: none; display: grid; place-items: center; }
-  .meet .avatar > div { width: 52px; height: 52px; margin-top: 6px; }
-  .meet .name { font-family: var(--serif); font-size: 18px; font-weight: 500; }
-  .meet .role { font-size: 12px; font-weight: 600; color: var(--accent-ink); letter-spacing: .02em; }
-  .meet .line { margin: 8px 0 0; color: var(--ink-2); font-size: 14.5px; line-height: 1.45; }
-  .hero { position: relative; overflow: hidden; padding: 22px 20px 20px; background: linear-gradient(160deg, #fff 0%, #fbf1f3 100%); }
-  .hero .copy { position: relative; z-index: 1; max-width: 60%; display: flex; flex-direction: column; gap: 6px; }
-  .hero .h2 { font-size: 23px; }
-  .hero .btn { margin-top: 14px; align-self: flex-start; }
-  .hero .art { position: absolute; right: 6px; top: -2px; width: 140px; height: 168px; }
-  .hero .pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+  .scene { min-height: 100svh; padding: max(16px, env(safe-area-inset-top)) 22px calc(104px + env(safe-area-inset-bottom)); max-width: 460px; margin: 0 auto; }
+  .top { width: 100%; display: flex; align-items: center; justify-content: space-between; }
+  .brand { font-family: var(--serif); font-size: 22px; font-weight: 600; }
+  .lento-big { width: 230px; height: 276px; margin-top: 8px; }
+  .meta { font-size: 13.5px; color: var(--ink-3); }
+  .scene .btn { width: 100%; }
 </style>
 </head>
 <body>
-<main class="app">
+<main class="scene">
   <div class="top">
-    <span class="brand">Lento <span class="tag">Vocal coach</span></span>
-    <span class="pill" id="streakPill" hidden></span>
+    <span class="brand">Lento</span>
+    <span class="pill" id="streak">0-day streak</span>
   </div>
-
-  <div>
-    <div class="eyebrow" id="date"></div>
-    <h1 id="greet">Good evening</h1>
-  </div>
-
-  <a class="card meet" href="welcome.html">
-    <div class="avatar"><div data-sloth="happy" data-pose="head"></div></div>
-    <div class="grow">
-      <div class="name">Lento</div>
-      <div class="role">Your vocal coach</div>
-      <p class="line" id="hiLine">“Hi! Slow down with me for a few minutes. I'll sing each exercise first, then play piano while you sing.”</p>
-    </div>
-  </a>
-
-  <section class="card hero">
-    <div class="art" data-sloth="happy"></div>
-    <div class="copy">
-      <span class="eyebrow">Today's lesson</span>
-      <span class="h2">Your vocal lesson with Lento</span>
-      <span class="sub" id="heroMeta">Warm-up, scales, your song, cooldown</span>
-      <a class="btn accent" href="lesson.html">Start your vocal lesson</a>
-    </div>
-  </section>
-
-  <section class="stats">
-    <div class="card stat"><div class="v" id="sStreak">0</div><div class="l">Day streak</div></div>
-    <div class="card stat"><div class="v" id="sWeek">0<small>min</small></div><div class="l">This week</div></div>
-    <div class="card stat"><div class="v" id="sAcc">–</div><div class="l">Last accuracy</div></div>
-  </section>
-
-  <section class="section">
-    <div class="section-head"><h2>Your song</h2><a href="song.html" id="songEdit">Add</a></div>
-    <a class="list" href="song.html" id="songCard"></a>
-  </section>
-
-  <section class="section">
-    <div class="section-head"><h2>Practice one exercise</h2><button class="sub" id="moreEx" style="font-weight:600;color:var(--accent-ink)">Show all</button></div>
-    <div class="list" id="exList"></div>
-  </section>
-
-  <section class="section">
-    <h2>Tools</h2>
-    <div class="list">
-      <a class="row" href="tuner.html">
-        <span class="badge"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 12h2M8 8v8M12 5v14M16 9v6M20 11v2"/></svg></span>
-        <span class="grow"><div class="title">Pitch tuner</div><div class="meta">Match a note and see how close you are</div></span>
-        <span class="chev">›</span>
-      </a>
-    </div>
-  </section>
-
-  <p class="hint">🎧 <b>Wired earbuds recommended.</b> The piano plays along with you, and earbuds keep the mic hearing only your voice. Nothing is recorded; your progress stays on this phone.</p>
-  <p class="hint">Lento is the musical marking for “slow.” She's here to remind you to slow down and make time for singing.</p>
+  <div class="grow-space"></div>
+  <div class="say fade-in" id="say">Good evening! Ready to sing?<small id="sub">Warm-up, scales, your song and a cooldown</small></div>
+  <div class="lento-big sway"><div data-sloth="happy" id="mascot"></div></div>
+  <div class="grow-space"></div>
+  <span class="meta" id="meta"></span>
+  <a class="btn accent big" href="lesson.html">Start your vocal lesson</a>
 </main>
 
 <script type="module">
-  import { EXERCISES, minutesFor, settings } from "./exercises.js";
-  import { buildLesson } from "./lesson.js";
-  import { loadSong } from "./song.js";
   import { stats } from "./store.js";
   import { drawSloths } from "./sloth.js";
   import { tabbar, greeting } from "./ui.js";
+  import { buildLesson } from "./lesson.js";
+  import { loadSong } from "./song.js";
 
   // First visit: Lento introduces herself (once more for anyone who met her as Mariah)
   let met = true;
@@ -107,37 +52,15 @@
   if (!met) location.replace("welcome.html");
 
   const $ = (id) => document.getElementById(id);
-  $("greet").textContent = greeting();
-  $("date").textContent = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+  const s = stats(), song = loadSong();
+  const minutes = buildLesson({ song }).minutes;
+  const today = s.count && new Date(JSON.parse(localStorage.getItem("lentoSessions") ?? "[]").at(-1)?.at).toDateString() === new Date().toDateString();
 
-  const song = loadSong();
-  const lesson = buildLesson({ song });
-  $("heroMeta").textContent = `Warm-up, scales, ${song ? "your song" : "a song"}, cooldown · about ${lesson.minutes} min`;
-
-  $("songEdit").textContent = song ? "Edit" : "Add";
-  $("songCard").innerHTML = song
-    ? `<span class="row"><span class="badge">♪</span><span class="grow"><div class="title">${esc(song.title)}</div><div class="meta">${song.sections.map((s) => esc(s.name)).join(" · ")}</div></span><span class="chev">›</span></span>`
-    : `<span class="row"><span class="badge">♪</span><span class="grow"><div class="title">Add a song you're practicing</div><div class="meta">Lento gives you the starting note and works through it with you</div></span><span class="chev">›</span></span>`;
-
-  const KINDS = { warmup: "Warm-up", scale: "Scale", cooldown: "Cooldown" };
-  const showEx = (all) => {
-    $("exList").innerHTML = EXERCISES.slice(0, all ? undefined : 4).map((ex) => `
-    <a class="row" href="lesson.html?only=${ex.id}">
-      <span class="grow"><div class="title">${ex.name}</div><div class="meta">${KINDS[ex.kind]} · “${ex.sound}” · ${ex.desc}</div></span>
-      <span class="meta">${Math.max(1, Math.round(minutesFor(ex, settings.climb, settings.speed)))} min</span>
-    </a>`).join("");
-    $("moreEx").hidden = all;
-  };
-  showEx(false);
-  $("moreEx").onclick = () => showEx(true);
-
-  const s = stats();
-  $("sStreak").textContent = s.streak;
-  $("sWeek").innerHTML = `${s.weekMinutes}<small>min</small>`;
-  $("sAcc").innerHTML = s.lastAccuracy === null ? "–" : `${s.lastAccuracy}<small>%</small>`;
-  if (s.streak > 1) { $("streakPill").hidden = false; $("streakPill").textContent = `🔥 ${s.streak} days`; }
-
-  function esc(t) { return String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]); }
+  $("streak").textContent = `${s.streak}-day streak`;
+  $("say").firstChild.textContent = today ? "You sang today! Want to go again?" : `${greeting()}! Ready to sing?`;
+  $("sub").textContent = song ? `Warm-up, scales, ${song.title} and a cooldown` : "Warm-up, scales and a cooldown";
+  $("meta").textContent = `About ${minutes} minutes${s.lastAccuracy !== null ? ` · last time ${s.lastAccuracy}% on pitch` : ""}`;
+  if (today) $("mascot").dataset.sloth = "proud";
 
   drawSloths();
   tabbar("today");

@@ -2,34 +2,40 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("lentoTheme")||"neutral"}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Lento">
-<meta name="theme-color" content="#f7f3ef">
+<meta name="theme-color" content="#f6f5f2">
 <title>Vocal lesson · Lento</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="theme.css">
 <link rel="icon" href="sloth.svg">
-<link rel="apple-touch-icon" href="sloth.svg">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
-  /* Check-in */
-  #checkin { padding-bottom: calc(32px + env(safe-area-inset-bottom)); gap: 20px; }
-  .nav { display: flex; align-items: center; justify-content: space-between; }
-  .nav .mid { text-align: center; font-weight: 600; font-size: 15px; }
-  .welcome { display: flex; gap: 16px; align-items: center; }
-  .welcome .art { width: 92px; height: 110px; flex: none; }
-  .welcome h1 { font-size: 26px; }
-  .moods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .mood { padding: 12px 6px; border-radius: 14px; background: var(--surface); border: 1.5px solid var(--line); display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
-  .mood .e { font-size: 22px; }
-  .mood[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+  /* Check-in: one question per screen */
+  #checkin { min-height: 100svh; max-width: 460px; margin: 0 auto; padding: max(14px, env(safe-area-inset-top)) 22px calc(24px + env(safe-area-inset-bottom)); }
+  .nav { width: 100%; display: flex; align-items: center; gap: 12px; }
+  .nav .steps { flex: 1; }
+  #checkin .lento-big { width: 170px; height: 204px; }
+  #checkin .say { font-size: 18px; }
+  #checkin .btn { width: 100%; }
+  .linkish { font-size: 14px; font-weight: 600; color: var(--accent-ink); padding: 6px 10px; }
+  .plan { width: 100%; text-align: left; }
   .plan .row { padding: 11px 16px; }
   .plan .sec { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); width: 74px; flex: none; }
   .plan .row .title { font-size: 14.5px; }
   .plan .row a { color: var(--accent-ink); font-weight: 600; }
-  #settings { padding: 4px 16px; }
+  .themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 6px 0 14px; }
+  .themes button { padding: 10px 4px; border-radius: 14px; border: 2px solid var(--line); font-size: 13px; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .themes button i { width: 34px; height: 22px; border-radius: 8px; }
+  .themes button[aria-pressed="true"] { border-color: var(--accent); }
+  #settings { padding: 0 20px; }
+  #settings h2 { margin: 4px 0 6px; }
   #settings .row { padding: 12px 0; }
   .toggle { width: 44px; height: 26px; border-radius: 13px; background: var(--line); position: relative; transition: background .2s; flex: none; }
   .toggle::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.15); transition: left .2s; }
@@ -37,7 +43,7 @@
   .toggle[aria-checked="true"]::after { left: 21px; }
 
   /* The lesson stage: one fixed screen, nothing to scroll or tap mid-session */
-  #stage { position: fixed; inset: 0; z-index: 5; background: var(--bg); }
+  #stage { position: fixed; inset: 0; z-index: 5; background: var(--bg-glow) no-repeat, var(--bg); }
   #stage .inner { max-width: 460px; height: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 12px;
     padding: max(12px, env(safe-area-inset-top)) 18px calc(14px + env(safe-area-inset-bottom)); }
   .bar { display: flex; align-items: center; gap: 12px; }
@@ -68,61 +74,63 @@
   .controls { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
 
   /* Up next */
-  .overlay { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 24px; background: rgba(247, 243, 239, .86); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  .overlay { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 24px; background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
   .overlay .card { width: 100%; max-width: 360px; padding: 24px 20px 20px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
   .ring { width: 64px; height: 64px; margin: 6px 0; position: relative; display: grid; place-items: center; font-family: var(--serif); font-size: 26px; }
   .ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
   .ring circle { fill: none; stroke-width: 4; }
 
-  /* Done */
-  #done { gap: 18px; padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
-  .summary { padding: 22px; display: flex; flex-direction: column; gap: 10px; align-items: center; text-align: center; }
-  .summary .big { font-family: var(--serif); font-size: 54px; line-height: 1; }
-  .summary .art { width: 110px; height: 132px; }
+  /* Done: a little celebration */
+  #done { min-height: 100svh; max-width: 460px; margin: 0 auto; padding: max(24px, env(safe-area-inset-top)) 22px calc(24px + env(safe-area-inset-bottom)); }
+  #done .score { font-family: var(--serif); font-size: 64px; line-height: 1; color: var(--accent-ink); }
+  #done h1 { font-size: 30px; }
+  #done .btn { width: 100%; }
+  #done .lento-big { width: 190px; height: 228px; }
   .acc { font-weight: 600; font-variant-numeric: tabular-nums; }
   .acc.ok { color: var(--ok); } .acc.low { color: var(--low); } .acc.high { color: var(--high); }
+  .confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 40; }
+  .confetti i { position: absolute; top: -12px; width: 8px; height: 14px; border-radius: 2px; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
 </style>
 </head>
 <body>
 
 <!-- 1. Check-in: how are you feeling, and today's plan -->
-<main class="app" id="checkin">
+<main class="scene" id="checkin">
   <div class="nav">
-    <a class="icon-btn" href="./" aria-label="Back to Today"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
-    <div class="mid">Vocal lesson</div>
+    <a class="icon-btn" href="./" id="back" aria-label="Back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <div class="steps" id="steps"><i class="on"></i><i></i></div>
     <button class="icon-btn" id="gear" aria-label="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
   </div>
+  <div class="grow-space"></div>
+  <div class="say fade-in" id="ask">How's your voice feeling today?</div>
+  <div class="lento-big sway"><div id="hello" data-sloth="happy"></div></div>
 
-  <div class="welcome">
-    <div class="art" id="hello" data-sloth="happy"></div>
-    <div>
-      <span class="eyebrow">Lento</span>
-      <h1 id="ask">How's your voice feeling today?</h1>
-    </div>
-  </div>
+  <!-- Step 1: how are you feeling -->
+  <div class="choices" id="moods"></div>
 
-  <div class="moods" id="moods"></div>
-  <p class="sub" id="moodLine"></p>
-
-  <section class="card" id="settings" hidden>
-    <div class="row"><span class="grow title">Lowest note</span><div class="stepper"><button id="keyDown" aria-label="Lower">−</button><span class="val" id="keyVal">G3</span><button id="keyUp" aria-label="Higher">+</button></div></div>
-    <div class="row"><span class="grow title">Half steps to climb</span><div class="stepper"><button id="climbDown" aria-label="Fewer">−</button><span class="val" id="climbVal">9</span><button id="climbUp" aria-label="More">+</button></div></div>
-    <div class="row"><span class="grow title">Speed</span><div class="stepper"><button id="speedDown" aria-label="Slower">−</button><span class="val" id="speedVal">100%</span><button id="speedUp" aria-label="Faster">+</button></div></div>
-    <div class="row"><span class="grow title">Lento talks</span><button class="toggle" id="speak" role="switch" aria-checked="true" aria-label="Lento talks"></button></div>
-    <div class="row"><span class="grow"><div class="title">Lento demos each exercise</div><div class="meta">She sings it once, then it's your turn</div></span><button class="toggle" id="demo" role="switch" aria-checked="true" aria-label="Lento demos each exercise"></button></div>
-    <div class="row"><span class="grow"><div class="title">Stop and fix mistakes</div><div class="meta">If a phrase is flat, sharp or breathy, she drills it before moving on</div></span><button class="toggle" id="drill" role="switch" aria-checked="true" aria-label="Stop and fix mistakes"></button></div>
-  </section>
-
-  <section class="section">
-    <div class="section-head"><h2>Today's lesson</h2><button class="sub" id="shuffle" style="font-weight:600;color:var(--accent-ink)">Mix it up</button></div>
-    <div class="list plan" id="plan"></div>
+  <!-- Step 2: today's plan, folded away -->
+  <div id="ready" hidden style="width:100%;display:flex;flex-direction:column;gap:10px;align-items:center">
     <span class="sub" id="planMeta"></span>
-  </section>
-
-  <div class="error" id="error"></div>
-  <button class="btn accent block" id="go">Start your vocal lesson</button>
-  <p class="hint">🎧 <b>Wear wired earbuds</b> so the mic hears you, not the piano. Lento sings each pattern first, then you sing it with the piano. It moves up a half step each time on its own, so you never have to tap.</p>
+    <div class="list plan" id="plan" hidden></div>
+    <div><button class="linkish" id="showPlan">See today's plan</button><button class="linkish" id="shuffle">Mix it up</button></div>
+    <div class="error" id="error"></div>
+    <button class="btn accent big" id="go">Let's sing</button>
+    <span class="sub" style="font-size:12.5px;color:var(--ink-3)">Wired earbuds work best</span>
+  </div>
+  <div class="grow-space"></div>
 </main>
+
+<section class="card" id="settings">
+  <h2>Settings</h2>
+  <div class="themes" id="themes"></div>
+  <div class="row"><span class="grow title">Lowest note</span><div class="stepper"><button id="keyDown" aria-label="Lower">−</button><span class="val" id="keyVal">G3</span><button id="keyUp" aria-label="Higher">+</button></div></div>
+  <div class="row"><span class="grow title">Half steps to climb</span><div class="stepper"><button id="climbDown" aria-label="Fewer">−</button><span class="val" id="climbVal">9</span><button id="climbUp" aria-label="More">+</button></div></div>
+  <div class="row"><span class="grow title">Speed</span><div class="stepper"><button id="speedDown" aria-label="Slower">−</button><span class="val" id="speedVal">100%</span><button id="speedUp" aria-label="Faster">+</button></div></div>
+  <div class="row"><span class="grow title">Lento talks</span><button class="toggle" id="speak" role="switch" aria-checked="true" aria-label="Lento talks"></button></div>
+  <div class="row"><span class="grow"><div class="title">Lento demos each exercise</div><div class="meta">She sings it once, then it's your turn</div></span><button class="toggle" id="demo" role="switch" aria-checked="true" aria-label="Lento demos each exercise"></button></div>
+  <div class="row"><span class="grow"><div class="title">Stop and fix mistakes</div><div class="meta">If a phrase is flat, sharp or breathy, she drills it before moving on</div></span><button class="toggle" id="drill" role="switch" aria-checked="true" aria-label="Stop and fix mistakes"></button></div>
+</section>
 
 <!-- 2. The lesson itself -->
 <section id="stage" hidden>
@@ -168,17 +176,20 @@
 </div>
 
 <!-- 3. Done -->
-<main class="app" id="done" hidden>
-  <section class="card summary">
-    <div class="art" data-sloth="proud"></div>
-    <div class="eyebrow">Lesson complete</div>
-    <div class="big" id="sumAcc">0%</div>
-    <div class="sub" id="sumMeta">of notes on pitch</div>
-  </section>
-  <div class="list" id="sumList"></div>
-  <a class="btn accent block" href="progress.html">See your progress</a>
-  <a class="btn ghost block" href="./">Back to Today</a>
+<main class="scene" id="done" hidden>
+  <div class="grow-space"></div>
+  <div class="eyebrow">Lesson complete</div>
+  <h1 id="doneTitle">You did it!</h1>
+  <div class="lento-big sway"><div data-sloth="proud"></div></div>
+  <div class="score" id="sumAcc">0%</div>
+  <div class="sub" id="sumMeta">of notes on pitch</div>
+  <div class="list" id="sumList" style="width:100%;text-align:left" hidden></div>
+  <button class="linkish" id="showSum">See each exercise</button>
+  <div class="grow-space"></div>
+  <a class="btn accent big" href="./">Continue</a>
+  <a class="linkish" href="progress.html">See your progress</a>
 </main>
+<div class="confetti" id="confetti"></div>
 
 <script type="module">
   import { PitchDetector } from "https://cdn.jsdelivr.net/npm/pitchy@4.1.0/+esm";
@@ -191,6 +202,7 @@
   import { saveSession, lastSession } from "./store.js";
   import { drawKeys, keyRange } from "./keys.js";
   import { speak, speakAndWait, hush, unlock } from "./voice.js";
+  import { sheet } from "./ui.js";
 
   const NOTES = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
   const IN_TUNE_CENTS = 25;
@@ -218,16 +230,41 @@
   const only = byId(new URLSearchParams(location.search).get("only"));
 
   // ---------- Check-in ----------
+  const MOOD_ICONS = {
+    tired: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>`,
+    okay: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/></svg>`,
+    great: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l2 6.5L20.5 12 14 14.5 12 21l-2-6.5L3.5 12 10 9.5z"/></svg>`,
+  };
+
+  // Step 1: tap how you feel, then Lento answers and shows the plan
   function renderMoods() {
     $("moods").innerHTML = Object.entries(MOODS).map(([id, m]) =>
-      `<button class="mood" data-mood="${id}" aria-pressed="${id === mood}"><span class="e">${m.emoji}</span>${m.label}</button>`).join("");
-    $("moods").querySelectorAll(".mood").forEach((b) => (b.onclick = () => {
+      `<button class="choice" data-mood="${id}"><span class="ic">${MOOD_ICONS[id]}</span><span class="grow"><div>${m.label}</div><div class="hint-line">${m.hint}</div></span><span class="chev">›</span></button>`).join("");
+    $("moods").querySelectorAll(".choice").forEach((b) => (b.onclick = () => {
       mood = b.dataset.mood;
-      renderMoods();
-      plan();
-      setMood($("hello"), mood === "tired" ? "sleepy" : mood === "great" ? "sing" : "happy");
+      b.setAttribute("aria-pressed", "true");
+      setTimeout(() => showReady(MOODS[mood].line), 180);
     }));
-    $("moodLine").textContent = only ? "" : MOODS[mood].line;
+  }
+
+  function showReady(line) {
+    plan();
+    setMood($("hello"), mood === "tired" ? "sleepy" : mood === "great" ? "sing" : "happy");
+    $("ask").textContent = line;
+    $("ask").classList.remove("fade-in"); void $("ask").offsetWidth; $("ask").classList.add("fade-in");
+    $("moods").hidden = true;
+    $("ready").hidden = false;
+    $("ready").classList.add("fade-in");
+    $("steps").children[1].classList.add("on");
+    $("back").onclick = (e) => {
+      if (only) return;
+      e.preventDefault();
+      $("ready").hidden = true; $("moods").hidden = false; $("plan").hidden = true;
+      $("steps").children[1].classList.remove("on");
+      $("ask").textContent = "How's your voice feeling today?";
+      renderMoods();
+      $("back").onclick = null;
+    };
   }
 
   function plan() {
@@ -243,8 +280,10 @@
       rows.splice(rows.length - 1, 0, `<div class="row"><span class="sec">Song</span><span class="grow"><div class="meta"><a href="song.html">Add a song you're practicing</a> and we'll work on it here.</div></span></div>`);
     }
     $("plan").innerHTML = rows.join("");
-    $("planMeta").textContent = `About ${Math.max(1, lesson.minutes)} minutes. Every lesson is a little different.`;
-    $("go").textContent = only ? "Start exercise" : "Start your vocal lesson";
+    const n = lesson.blocks.filter((b) => b.section !== "Song").length, songs = lesson.blocks.filter((b) => b.section === "Song");
+    $("planMeta").textContent = only ? `About ${Math.max(1, lesson.minutes)} minute${lesson.minutes > 1 ? "s" : ""}` :
+      `${n} exercises${songs.length ? ` · ${songs[0].ex.song}` : ""} · about ${Math.max(1, lesson.minutes)} min`;
+    $("go").textContent = only ? "Start exercise" : "Let's sing";
   }
 
   // ---------- Pitch lane ----------
@@ -281,8 +320,10 @@
       g.beginPath();
       g.roundRect(x0, yy, Math.max(3, x1 - x0), barH, barH / 2);
       if (!e.scored) { g.setLineDash([3, 3]); g.strokeStyle = ink3; g.lineWidth = 1.2; g.stroke(); g.setLineDash([]); continue; }
-      g.fillStyle = !r ? (lane.demo ? css("--line") : css("--accent-soft")) : r.kind === "ok" ? css("--ok") : r.kind === "low" ? css("--low") : r.kind === "high" ? css("--high") : r.kind === "breathy" ? ink3 : line;
+      g.globalAlpha = r ? 1 : lane.demo ? .3 : .5;
+      g.fillStyle = !r ? css("--accent") : r.kind === "ok" ? css("--ok") : r.kind === "low" ? css("--low") : r.kind === "high" ? css("--high") : r.kind === "breathy" ? ink3 : line;
       g.fill();
+      g.globalAlpha = 1;
     }
     // Your voice
     g.strokeStyle = css("--ink"); g.lineWidth = 2.2; g.lineJoin = "round"; g.lineCap = "round";
@@ -649,9 +690,19 @@
       const p = Math.round((r.hits / r.total) * 100);
       return `<div class="row"><span class="grow"><div class="title">${r.name}</div><div class="meta">${r.section}</div></span><span class="acc ${tone(p)}">${p}%</span></div>`;
     }).join("");
-    $("sumList").hidden = !results.length;
+    $("sumList").hidden = true;
+    $("showSum").hidden = !results.length;
+    $("doneTitle").textContent = finished ? oneOf(["You did it!", "Beautiful work!", "That's a lesson!"]) : "Nice singing!";
+    if (finished) confetti();
     window.scrollTo(0, 0);
     if (finished) speak("That's your lesson. Really nice work today. I'm proud of you.");
+  }
+
+  function confetti() {
+    const colors = [css("--accent"), css("--ok"), css("--low"), css("--ink-3"), css("--line")];
+    $("confetti").innerHTML = Array.from({ length: 70 }, () =>
+      `<i style="left:${Math.random() * 100}%;background:${oneOf(colors)};animation-duration:${2.2 + Math.random() * 2}s;animation-delay:${Math.random() * .6}s"></i>`).join("");
+    setTimeout(() => ($("confetti").innerHTML = ""), 5000);
   }
 
   function backToCheckin() {
@@ -723,8 +774,25 @@
   $("speedDown").onclick = change(() => (settings.speed = clamp(settings.speed - 10, 50, 150)));
   $("speedUp").onclick = change(() => (settings.speed = clamp(settings.speed + 10, 50, 150)));
   for (const k of ["speak", "demo", "drill"]) $(k).onclick = () => { settings[k] = !settings[k]; renderSettings(); };
-  $("gear").onclick = () => ($("settings").hidden = !$("settings").hidden);
-  $("shuffle").onclick = plan;
+  const settingsSheet = sheet($("settings"));
+  $("gear").onclick = settingsSheet.toggle;
+  $("shuffle").onclick = () => { plan(); $("plan").hidden = false; $("showPlan").hidden = true; };
+  $("showPlan").onclick = () => { $("plan").hidden = false; $("showPlan").hidden = true; };
+  $("showSum").onclick = () => { $("sumList").hidden = false; $("showSum").hidden = true; };
+
+  // The look of the app
+  const THEMES = { neutral: ["Neutral", "#f6f5f2", "#18181b"], sunny: ["Sunny", "#fff8e1", "#ffad1f"], lemon: ["Lemon", "#fffbe8", "#ffd23f"], studio: ["Studio", "#fbf4ee", "#d9577a"], night: ["Night", "#151022", "#f2b45a"], forest: ["Forest", "#f3f1e4", "#3f8f63"] };
+  function renderThemes() {
+    const cur = document.documentElement.dataset.theme;
+    $("themes").innerHTML = Object.entries(THEMES).map(([id, [name, bg, acc]]) =>
+      `<button data-t="${id}" aria-pressed="${id === cur}"><i style="background:linear-gradient(135deg, ${bg} 55%, ${acc} 55%);border:1px solid var(--line)"></i>${name}</button>`).join("");
+    $("themes").querySelectorAll("button").forEach((b) => (b.onclick = () => {
+      document.documentElement.dataset.theme = b.dataset.t;
+      try { localStorage.setItem("lentoTheme", b.dataset.t); } catch {}
+      renderThemes();
+    }));
+  }
+  renderThemes();
   $("go").onclick = () => { if (!running) start(); };
   $("pause").onclick = togglePause;
   $("skip").onclick = skip;
@@ -733,8 +801,8 @@
   // For automated tests: ?debug exposes what the lane is showing
   if (new URLSearchParams(location.search).has("debug")) window.lento = { get lane() { return lane; } };
 
-  if (only) { $("ask").textContent = only.name; $("moods").hidden = true; $("shuffle").hidden = true; }
   renderMoods();
+  if (only) { $("steps").hidden = true; $("shuffle").hidden = true; showReady(`${only.name}: ${only.desc}.`); }
   renderSettings();
   plan();
   drawSloths();

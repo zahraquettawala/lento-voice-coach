@@ -10,9 +10,9 @@ Open **https://zahraquettawala.github.io/lento-voice-coach/** on your phone in S
 
 ## What's in the app
 
-- **Welcome** (`welcome.html`): Lento introduces herself on your first visit.
-- **Today** (`index.html`): start today's lesson, your song, your streak and accuracy, and a list of single exercises to practice.
-- **Lesson** (`lesson.html`): a quick check-in ("How's your voice feeling today?") and today's plan, then one full-screen lesson:
+- **Welcome** (`welcome.html`): Lento introduces herself, one idea per screen.
+- **Today** (`index.html`): just Lento and one button to start today's lesson. A tab bar with a big Sing button gets you everywhere else.
+- **Lesson** (`lesson.html`): Lento asks how your voice feels, shows today's plan in one line, then runs one full-screen lesson and ends with a little celebration:
   - **Warm-up, Scales, Song, Cooldown.** The exercises change from lesson to lesson, and the plan adapts to how you feel: tired means gentle warm-ups and a smaller range; ready to sing means a wider range and fast runs.
   - **Every exercise:** Lento sings the pattern once ("me-me-ma-ma-moo"), then it's your turn with just the piano. Each loop moves a half step on its own; nothing to tap.
   - **Live coaching:** if a phrase is flat, sharp or breathy, Lento stops, says what happened, and sings it again with you (up to two more tries) before moving on. Switch it off in settings with "Stop and fix mistakes."
@@ -20,6 +20,8 @@ Open **https://zahraquettawala.github.io/lento-voice-coach/** on your phone in S
 - **Your song** (`song.html`): the song you're practicing, with up to 3 sections, a starting note each, and an optional melody.
 - **Tuner** (`tuner.html`): the note you're singing against a target note, with a flat / on pitch / sharp meter.
 - **Progress** (`progress.html`): accuracy over recent lessons, accuracy per exercise, and history.
+
+Three looks, picked in lesson settings: Night (default), Studio and Forest. Add it to your home screen in Safari (Share, then Add to Home Screen) and it opens full screen like an app.
 
 Wear wired earbuds so the mic hears you, not the piano. Within 25 cents of the target counts as on pitch, so vibrato isn't penalized.
 

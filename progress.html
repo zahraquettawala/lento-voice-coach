@@ -2,17 +2,20 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("lentoTheme")||"neutral"}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Lento">
-<meta name="theme-color" content="#f7f3ef">
+<meta name="theme-color" content="#f6f5f2">
 <title>Progress · Lento</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="theme.css">
 <link rel="icon" href="sloth.svg">
-<link rel="apple-touch-icon" href="sloth.svg">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
   .chart-card { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
   .chart-top { display: flex; justify-content: space-between; align-items: baseline; }
@@ -64,6 +67,11 @@
     </section>
   </div>
 
+  <section class="section">
+    <h2>Practice one exercise</h2>
+    <div class="list" id="practice"></div>
+  </section>
+
   <p class="hint">Progress is saved only on this phone. Clearing Safari's website data resets it.</p>
 </main>
 
@@ -74,6 +82,7 @@
   import { tabbar } from "./ui.js";
 
   const $ = (id) => document.getElementById(id);
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
   const all = sessions();
   const s = stats();
   $("sStreak").textContent = s.streak;
@@ -128,23 +137,30 @@
     const y = (v) => h - 10 - (v / 100) * (h - 20);
     g.font = "500 10px Inter, -apple-system, sans-serif";
     for (const v of [0, 50, 100]) {
-      g.strokeStyle = "#ebe3de"; g.lineWidth = 1;
+      g.strokeStyle = css("--line"); g.lineWidth = 1;
       g.beginPath(); g.moveTo(left, y(v)); g.lineTo(w, y(v)); g.stroke();
-      g.fillStyle = "#a3969b"; g.fillText(`${v}%`, 0, y(v) + 3);
+      g.fillStyle = css("--ink-3"); g.fillText(`${v}%`, 0, y(v) + 3);
     }
     // Soft area under the line, then the line, then points
     g.beginPath();
     values.forEach((v, i) => (i ? g.lineTo(x(i), y(v)) : g.moveTo(x(i), y(v))));
     g.lineTo(x(values.length - 1), y(0)); g.lineTo(x(0), y(0)); g.closePath();
-    g.fillStyle = "rgba(181,103,125,.10)"; g.fill();
+    g.globalAlpha = .14; g.fillStyle = css("--accent"); g.fill(); g.globalAlpha = 1;
     g.beginPath();
     values.forEach((v, i) => (i ? g.lineTo(x(i), y(v)) : g.moveTo(x(i), y(v))));
-    g.strokeStyle = "#b5677d"; g.lineWidth = 2.5; g.lineJoin = "round"; g.stroke();
+    g.strokeStyle = css("--accent"); g.lineWidth = 2.5; g.lineJoin = "round"; g.stroke();
     values.forEach((v, i) => {
       g.beginPath(); g.arc(x(i), y(v), 3.5, 0, Math.PI * 2);
-      g.fillStyle = "#fff"; g.fill(); g.strokeStyle = "#b5677d"; g.lineWidth = 2; g.stroke();
+      g.fillStyle = css("--surface"); g.fill(); g.strokeStyle = css("--accent"); g.lineWidth = 2; g.stroke();
     });
   }
+
+  const KINDS = { warmup: "Warm-up", scale: "Scale", cooldown: "Cooldown" };
+  $("practice").innerHTML = EXERCISES.map((ex) => `
+    <a class="row" href="lesson.html?only=${ex.id}">
+      <span class="grow"><div class="title">${ex.name}</div><div class="meta">${KINDS[ex.kind]} · “${ex.sound}”</div></span>
+      <span class="chev">›</span>
+    </a>`).join("");
 
   drawSloths();
   tabbar("progress");

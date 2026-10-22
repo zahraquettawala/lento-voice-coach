@@ -2,17 +2,20 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("lentoTheme")||"neutral"}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Lento">
-<meta name="theme-color" content="#f7f3ef">
+<meta name="theme-color" content="#f6f5f2">
 <title>Tuner · Lento</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="theme.css">
 <link rel="icon" href="sloth.svg">
-<link rel="apple-touch-icon" href="sloth.svg">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
   .readout { padding: 22px 18px 18px; display: flex; flex-direction: column; gap: 18px; }
   .note { text-align: center; }
@@ -105,6 +108,7 @@
   let recent = []; // { t, midi } for the current note, used to find the vibrato's center
   const trace = []; // { t, midi } points, midi may be null for silence
 
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
   function midiFromHz(hz) { return 69 + 12 * Math.log2(hz / 440); }
   function noteLabel(midi) {
     const n = Math.round(midi);
@@ -277,16 +281,16 @@
     // Note grid lines
     ctx.font = "500 10px Inter, -apple-system, sans-serif";
     for (let m = mid - span; m <= mid + span; m++) {
-      ctx.strokeStyle = m === mid ? "#6f9e84" : "#ebe3de";
+      ctx.strokeStyle = m === mid ? css("--ok") : css("--line");
       ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(0, y(m)); ctx.lineTo(w, y(m)); ctx.stroke();
       const { letter, octave } = noteLabel(m);
-      ctx.fillStyle = "#a3969b";
+      ctx.fillStyle = css("--ink-3");
       ctx.fillText(`${letter}${octave}`, 6, y(m) - 3);
     }
 
     // Pitch line, broken wherever there was silence
-    ctx.strokeStyle = "#2b2226";
+    ctx.strokeStyle = css("--ink");
     ctx.lineWidth = 2.5;
     ctx.lineJoin = "round";
     ctx.beginPath();

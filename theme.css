@@ -1,23 +1,86 @@
-/* Lento design system: warm linen, deep ink, muted rose. */
-:root {
-  --bg: #f7f3ef;
+/* Lento design system. Three looks, picked with data-theme on <html>:
+   studio (default): warm rose and peach. night: a late-night practice room,
+   deep plum with warm gold. forest: soft greens and cream. */
+[data-theme="night"] {
+  --bg: #151022;
+  --bg-glow: radial-gradient(120% 55% at 50% 0%, #2d2047 0%, #151022 65%);
+  --surface: #211a33;
+  --surface-2: #2a213f;
+  --ink: #f7f0ea;
+  --ink-2: #c9bdd1;
+  --ink-3: #8f82a2;
+  --line: #352b4c;
+  --accent: #f2b45a;
+  --accent-ink: #f6c77c;
+  --accent-soft: #3b2e44;
+  --ok: #6fd6a8;
+  --ok-soft: #1f3a33;
+  --low: #f2a65a;
+  --low-soft: #3d2e25;
+  --high: #ff7a85;
+  --high-soft: #3f2430;
+  --bar: rgba(21, 16, 34, .88);
+  --cta: linear-gradient(135deg, #f7cc82, #ee9a5c);
+  --cta-ink: #1b1328;
+  --cta-shadow: 0 8px 24px rgba(242, 180, 90, .35);
+  --halo: radial-gradient(closest-side, rgba(242, 180, 90, .28), transparent);
+  --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+  color-scheme: dark;
+}
+:root, [data-theme="studio"] {
+  --bg: #fbf4ee;
+  --bg-glow: linear-gradient(180deg, #fde7e4 0%, #fbf4ee 55%);
   --surface: #ffffff;
-  --surface-2: #fbf8f5;
-  --ink: #2b2226;
-  --ink-2: #6b5e64;
-  --ink-3: #a3969b;
-  --line: #ebe3de;
-  --accent: #b5677d;
-  --accent-ink: #9c5468;
-  --accent-soft: #f4e4e8;
-  --ok: #6f9e84;
-  --ok-soft: #e3efe7;
-  --low: #cc9358;
-  --low-soft: #f6eadc;
-  --high: #c4655f;
-  --high-soft: #f6e1df;
-  --radius: 18px;
-  --shadow: 0 1px 2px rgba(43, 34, 38, .04), 0 8px 24px rgba(43, 34, 38, .05);
+  --surface-2: #fdf7f2;
+  --ink: #2a1a22;
+  --ink-2: #6e5560;
+  --ink-3: #a8939b;
+  --line: #f0e2da;
+  --accent: #d9577a;
+  --accent-ink: #b8405f;
+  --accent-soft: #fde3ea;
+  --ok: #3fa47a;
+  --ok-soft: #dcf3e8;
+  --low: #e8973f;
+  --low-soft: #fbecd9;
+  --high: #e05a52;
+  --high-soft: #fbe1df;
+  --bar: rgba(255, 250, 246, .92);
+  --cta: linear-gradient(135deg, #ec6d8f, #c94f8d);
+  --cta-ink: #fff;
+  --cta-shadow: 0 8px 20px rgba(217, 87, 122, .35);
+  --halo: radial-gradient(closest-side, rgba(251, 195, 212, .7), transparent);
+  --shadow: 0 2px 4px rgba(90, 30, 50, .05), 0 12px 32px rgba(217, 87, 122, .10);
+  color-scheme: light;
+}
+[data-theme="forest"] {
+  --bg: #f3f1e4;
+  --bg-glow: linear-gradient(180deg, #e2efd5 0%, #f3f1e4 55%);
+  --surface: #fffdf5;
+  --surface-2: #f8f6ea;
+  --ink: #1f2a22;
+  --ink-2: #55655a;
+  --ink-3: #93a097;
+  --line: #e3e2cf;
+  --accent: #3f8f63;
+  --accent-ink: #2f7550;
+  --accent-soft: #dcefd9;
+  --ok: #3f8f63;
+  --ok-soft: #dcefd9;
+  --low: #e0973c;
+  --low-soft: #f7ead5;
+  --high: #d65a4a;
+  --high-soft: #f6dfda;
+  --bar: rgba(255, 253, 245, .94);
+  --cta: #3f8f63;
+  --cta-ink: #fff;
+  --cta-shadow: 0 5px 0 #2a6a47;
+  --halo: radial-gradient(closest-side, rgba(169, 214, 166, .8), transparent);
+  --shadow: 0 3px 0 rgba(31, 42, 34, .06), 0 10px 26px rgba(63, 143, 99, .10);
+  color-scheme: light;
+}
+:root {
+  --radius: 22px;
   --serif: "Fraunces", Georgia, "Times New Roman", serif;
   --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
@@ -26,7 +89,7 @@
 [hidden] { display: none !important; }
 html, body { margin: 0; min-height: 100%; }
 body {
-  background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.45;
+  background: var(--bg-glow) no-repeat, var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.45;
   -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
 }
 button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; padding: 0; }
@@ -61,9 +124,10 @@ h2, .h2 { font-family: var(--serif); font-weight: 500; font-size: 20px; margin: 
 .stat .l { font-size: 12px; color: var(--ink-3); margin-top: 6px; }
 
 /* Buttons */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 50px; padding: 0 22px; border-radius: 14px; font-weight: 600; font-size: 15.5px; background: var(--ink); color: #fff; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 50px; padding: 0 22px; border-radius: 16px; font-weight: 700; font-size: 16px; background: var(--ink); color: var(--bg); }
+.btn.big { height: 58px; font-size: 17px; border-radius: 18px; }
 .btn.block { width: 100%; }
-.btn.accent { background: var(--accent); }
+.btn.accent { background: var(--cta); color: var(--cta-ink); box-shadow: var(--cta-shadow); }
 .btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
 .btn.stop { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
 .icon-btn { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); }
@@ -71,12 +135,37 @@ h2, .h2 { font-family: var(--serif); font-weight: 500; font-size: 20px; margin: 
 .stepper button { width: 34px; height: 34px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); font-size: 18px; color: var(--ink-2); }
 .stepper .val { min-width: 58px; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
 
-/* Bottom tab bar */
-.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: rgba(255, 255, 255, .92); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
-.tabbar nav { max-width: 460px; margin: 0 auto; display: flex; }
-.tabbar a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 0 8px; font-size: 11px; font-weight: 600; color: var(--ink-3); }
+/* Bottom tab bar, with a raised Sing button in the middle */
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--bar); backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); view-transition-name: tabbar; }
+.tabbar nav { max-width: 460px; margin: 0 auto; display: flex; align-items: flex-end; }
+.tabbar a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 0 8px; font-size: 10.5px; font-weight: 600; color: var(--ink-3); transition: color .2s; }
 .tabbar a svg { width: 22px; height: 22px; }
 .tabbar a.on { color: var(--accent-ink); }
+.tabbar a.sing { color: var(--accent-ink); }
+.tabbar a.sing span { width: 58px; height: 58px; margin-top: -26px; margin-bottom: 1px; border-radius: 50%; display: grid; place-items: center; background: var(--cta); color: var(--cta-ink); box-shadow: var(--cta-shadow); border: 4px solid var(--bg); transition: transform .15s; }
+.tabbar a.sing span svg { width: 24px; height: 24px; }
+.tabbar a.sing:active span { transform: scale(.92); }
+
+/* Pull-up sheet */
+.sheet-backdrop { position: fixed; inset: 0; z-index: 30; background: rgba(10, 6, 14, .4); opacity: 0; pointer-events: none; transition: opacity .25s; }
+.sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+.sheet { position: fixed !important; left: 0; right: 0; bottom: 0; z-index: 31; max-width: 460px; margin: 0 auto; max-height: 85vh; overflow-y: auto; border-radius: 24px 24px 0 0 !important; padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important; transform: translateY(105%); transition: transform .32s cubic-bezier(.2, .8, .2, 1); display: block !important; }
+.sheet.open { transform: translateY(0); }
+.sheet-handle { width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 10px auto 6px; cursor: pointer; }
+
+/* Feels like an app: no zoom on double tap, gentle press feedback, smooth page changes */
+html { -webkit-text-size-adjust: 100%; }
+body { overscroll-behavior-y: none; }
+a, button { touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.btn, .row, .mood, .icon-btn, .card a { transition: transform .12s, background .2s; }
+.btn:active, .icon-btn:active, .mood:active { transform: scale(.96); }
+a.row:active, button.row:active, a.card:active { transform: scale(.985); }
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: .22s ease both page-out; }
+::view-transition-new(root) { animation: .3s cubic-bezier(.2, .8, .2, 1) both page-in; }
+@keyframes page-out { to { opacity: 0; transform: translateY(-6px); } }
+@keyframes page-in { from { opacity: 0; transform: translateY(10px); } }
+@media (prefers-reduced-motion: reduce) { ::view-transition-old(root), ::view-transition-new(root) { animation: none; } }
 
 /* Coach line: Lento's avatar and what she says */
 .coach { display: flex; align-items: center; gap: 12px; }
@@ -90,3 +179,117 @@ h2, .h2 { font-family: var(--serif); font-weight: 500; font-size: 20px; margin: 
 .hint b { color: var(--ink-2); font-weight: 600; }
 .error { color: var(--high); font-size: 14px; }
 .pill { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--accent-soft); color: var(--accent-ink); }
+
+/* "Just Lento" screens: one big sloth, one line from her, one button */
+.scene { min-height: 100svh; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
+.scene .grow-space { flex: 1; }
+.lento-big { position: relative; width: 220px; height: 264px; display: grid; place-items: center; }
+.lento-big::before { content: ""; position: absolute; inset: -30px; background: var(--halo); border-radius: 50%; z-index: -1; }
+.lento-big > div { width: 100%; height: 100%; }
+.sway > div { transform-origin: 50% 8%; animation: sway 5s ease-in-out infinite; }
+@keyframes sway { 0%, 100% { transform: rotate(-2.2deg); } 50% { transform: rotate(2.2deg); } }
+@media (prefers-reduced-motion: reduce) { .sway > div { animation: none; } }
+.say { position: relative; max-width: 320px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 14px 18px; font-size: 17px; font-weight: 600; line-height: 1.35; box-shadow: var(--shadow); }
+.say::after { content: ""; position: absolute; left: 50%; bottom: -8px; width: 16px; height: 16px; margin-left: -8px; background: var(--surface); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); transform: rotate(45deg); }
+.say small { display: block; margin-top: 4px; font-size: 13.5px; font-weight: 500; color: var(--ink-2); }
+.choices { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.choice { width: 100%; display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: 18px; background: var(--surface); border: 2px solid var(--line); font-size: 16px; font-weight: 600; text-align: left; box-shadow: var(--shadow); }
+.choice .e { font-size: 26px; }
+.choice .ic { width: 40px; height: 40px; border-radius: 12px; flex: none; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-ink); }
+.choice .ic svg { width: 20px; height: 20px; }
+.choice .grow { flex: 1; }
+.choice .hint-line { font-size: 13px; font-weight: 500; color: var(--ink-3); margin-top: 1px; }
+.choice .chev { color: var(--ink-3); font-size: 20px; }
+.choice[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.steps { width: 100%; display: flex; gap: 6px; }
+.steps i { flex: 1; height: 6px; border-radius: 3px; background: var(--line); transition: background .3s; }
+.steps i.on { background: var(--accent); }
+.fade-in { animation: page-in .35s cubic-bezier(.2, .8, .2, 1) both; }
+
+/* Yellow looks */
+[data-theme="sunny"] {
+  --bg: #fff8e1;
+  --bg-glow: linear-gradient(180deg, #ffefb0 0%, #fff8e1 55%);
+  --surface: #ffffff;
+  --surface-2: #fffcf0;
+  --ink: #33270f;
+  --ink-2: #6f5d3a;
+  --ink-3: #ab9b78;
+  --line: #f3e6bf;
+  --accent: #f0a500;
+  --accent-ink: #b57400;
+  --accent-soft: #ffefc2;
+  --ok: #3a9d6a;
+  --ok-soft: #dcf2e4;
+  --low: #e07b2e;
+  --low-soft: #fbe5d2;
+  --high: #d9534f;
+  --high-soft: #f9dedd;
+  --bar: rgba(255, 252, 240, .94);
+  --cta: linear-gradient(135deg, #ffd54a, #ffad1f);
+  --cta-ink: #33270f;
+  --cta-shadow: 0 8px 20px rgba(240, 165, 0, .35);
+  --halo: radial-gradient(closest-side, rgba(255, 213, 74, .55), transparent);
+  --shadow: 0 2px 4px rgba(120, 90, 20, .05), 0 12px 30px rgba(240, 165, 0, .12);
+  color-scheme: light;
+}
+[data-theme="lemon"] {
+  --bg: #fffbe8;
+  --bg-glow: linear-gradient(180deg, #fff3a8 0%, #fffbe8 50%);
+  --surface: #ffffff;
+  --surface-2: #fffdf3;
+  --ink: #1f1b12;
+  --ink-2: #5d5544;
+  --ink-3: #a29a84;
+  --line: #efe8c8;
+  --accent: #e6b800;
+  --accent-ink: #8f7200;
+  --accent-soft: #fff4b8;
+  --ok: #2f9e6e;
+  --ok-soft: #d8f2e5;
+  --low: #e0832e;
+  --low-soft: #fbe7d3;
+  --high: #d4504d;
+  --high-soft: #f8dcdb;
+  --bar: rgba(255, 253, 243, .95);
+  --cta: #ffd23f;
+  --cta-ink: #1f1b12;
+  --cta-shadow: 0 5px 0 #d9a800;
+  --halo: radial-gradient(closest-side, rgba(255, 228, 92, .6), transparent);
+  --shadow: 0 3px 0 rgba(31, 27, 18, .05), 0 10px 26px rgba(214, 170, 0, .10);
+  color-scheme: light;
+}
+
+/* Neutral: calm and professional. Off-white, near-black, one deep green accent, no glow */
+[data-theme="neutral"] {
+  --bg: #f6f5f2;
+  --bg-glow: linear-gradient(transparent, transparent);
+  --surface: #ffffff;
+  --surface-2: #fafaf8;
+  --ink: #18181b;
+  --ink-2: #52525b;
+  --ink-3: #9a9aa2;
+  --line: #e6e4df;
+  --accent: #2f6f5e;
+  --accent-ink: #2a6152;
+  --accent-soft: #e5efeb;
+  --ok: #2f855a;
+  --ok-soft: #e1f0e7;
+  --low: #c07a2c;
+  --low-soft: #f6ebdd;
+  --high: #c2453d;
+  --high-soft: #f6e0de;
+  --bar: rgba(255, 255, 255, .9);
+  --cta: #18181b;
+  --cta-ink: #ffffff;
+  --cta-shadow: 0 1px 2px rgba(0, 0, 0, .12);
+  --halo: radial-gradient(closest-side, rgba(47, 111, 94, .07), transparent);
+  --shadow: 0 1px 2px rgba(24, 24, 27, .04), 0 4px 16px rgba(24, 24, 27, .04);
+  --serif: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --radius: 16px;
+  color-scheme: light;
+}
+[data-theme="neutral"] h1, [data-theme="neutral"] .h1, [data-theme="neutral"] h2, [data-theme="neutral"] .h2 { font-weight: 600; letter-spacing: -.025em; }
+[data-theme="neutral"] .say { font-weight: 600; letter-spacing: -.01em; }
+[data-theme="neutral"] .btn { border-radius: 14px; }
+[data-theme="neutral"] .tabbar a.sing span { border-color: var(--bg); }

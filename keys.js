@@ -28,8 +28,8 @@ export function drawKeys(canvas, { lo, hi, lit = null, voice = null, voiceKind =
   let v = voice === null ? null : Math.round(voice);
   if (v !== null) { while (v < lo) v += 12; while (v > hi) v -= 12; }
 
-  const accent = css("--accent"), line = css("--line");
-  const dotColor = voiceKind === "ok" ? css("--ok") : voiceKind === "low" ? css("--low") : voiceKind === "high" ? css("--high") : css("--ink");
+  const accent = css("--accent"), line = "#e4dbd6"; // the keys look like real keys in any theme
+  const dotColor = voiceKind === "ok" ? css("--ok") : voiceKind === "low" ? css("--low") : voiceKind === "high" ? css("--high") : "#2b2226";
   const dot = (m, x, kwid, bottom) => {
     if (m !== v) return;
     g.beginPath(); g.arc(x + kwid / 2, bottom - 9, 4, 0, Math.PI * 2);
@@ -39,12 +39,12 @@ export function drawKeys(canvas, { lo, hi, lit = null, voice = null, voiceKind =
   for (const m of whites) {
     const x = xOf.get(m);
     g.beginPath(); g.roundRect(x + 0.5, 0.5, kw - 1, h - 1, [0, 0, 5, 5]);
-    g.fillStyle = m === lit ? accent : "#fff"; g.fill();
+    g.fillStyle = m === lit ? accent : "#fffdfa"; g.fill();
     g.strokeStyle = line; g.lineWidth = 1; g.stroke();
     if (m % 12 === 0 || m === lit) {
       g.font = `600 ${Math.min(10, kw * 0.42)}px Inter, -apple-system, sans-serif`;
       g.textAlign = "center";
-      g.fillStyle = m === lit ? "#fff" : css("--ink-3");
+      g.fillStyle = m === lit ? "#fff" : "#a3969b";
       g.fillText(NAMES[m % 12] + (Math.floor(m / 12) - 1), x + kw / 2, h - 7);
     }
     if (m !== lit) dot(m, x, kw, h - 12);
@@ -53,7 +53,7 @@ export function drawKeys(canvas, { lo, hi, lit = null, voice = null, voiceKind =
     if (!BLACK.has(m % 12)) continue;
     const x = xOf.get(m);
     g.beginPath(); g.roundRect(x, 0, bw, bh, [0, 0, 3, 3]);
-    g.fillStyle = m === lit ? accent : css("--ink"); g.fill();
+    g.fillStyle = m === lit ? accent : "#2b2226"; g.fill();
     if (m === v) { g.beginPath(); g.arc(x + bw / 2, bh - 8, 3, 0, Math.PI * 2); g.fillStyle = m === lit ? "#fff" : dotColor; g.fill(); }
   }
   // Your voice on the lit key: a ring so both show

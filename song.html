@@ -2,19 +2,22 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("lentoTheme")||"neutral"}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Lento">
-<meta name="theme-color" content="#f7f3ef">
+<meta name="theme-color" content="#f6f5f2">
 <title>Your song · Lento</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="theme.css">
 <link rel="icon" href="sloth.svg">
-<link rel="apple-touch-icon" href="sloth.svg">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
-  .app { padding-bottom: calc(32px + env(safe-area-inset-bottom)); gap: 18px; }
+  .app { gap: 18px; }
   .nav { display: flex; align-items: center; justify-content: space-between; }
   .nav .mid { text-align: center; font-weight: 600; font-size: 15px; }
   label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
@@ -31,10 +34,9 @@
 </head>
 <body>
 <main class="app">
-  <div class="nav">
-    <a class="icon-btn" href="./" aria-label="Back to Today"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
-    <div class="mid">Your song</div>
-    <span style="width:40px"></span>
+  <div>
+    <div class="eyebrow">What you're practicing</div>
+    <h1>Your song</h1>
   </div>
 
   <div class="coach">
@@ -53,6 +55,7 @@
   <p class="hint"><b>Starting note</b> is the first note you sing, like E4 or Bb3 (the Tuner can help you find it). <b>Melody</b> is optional: type the notes, like <code>E4 G4 A4:2 - G4</code>, where <code>:2</code> holds for 2 beats and <code>-</code> is a rest. With a melody, Lento sings it first and scores each note. Without one, she gives you the note and listens.</p>
 
   <div class="error" id="error"></div>
+  <div class="sub" id="saved" style="color:var(--ok);font-weight:600"></div>
   <div class="row-btns">
     <button class="btn ghost" id="clear">Remove song</button>
     <button class="btn accent" id="save">Save</button>
@@ -62,6 +65,7 @@
 <script type="module">
   import { loadSong, saveSong, parseNote, parseMelody } from "./song.js";
   import { drawSloths } from "./sloth.js";
+  import { tabbar } from "./ui.js";
 
   const $ = (id) => document.getElementById(id);
   const song = loadSong() ?? { title: "", bpm: 80, sections: [{ name: "Verse 1", start: "", melody: "" }, { name: "Chorus", start: "", melody: "" }] };
@@ -87,9 +91,10 @@
   }
 
   $("add").onclick = () => { song.sections.push({ name: "", start: "", melody: "" }); render(); };
-  $("clear").onclick = () => { saveSong(null); location.href = "./"; };
+  $("clear").onclick = () => { saveSong(null); location.reload(); };
   $("save").onclick = () => {
     $("error").textContent = "";
+    $("saved").textContent = "";
     song.title = $("title").value.trim();
     song.bpm = Number($("bpm").value) || 80;
     let ok = !!song.title;
@@ -102,12 +107,13 @@
     });
     if (!ok) { $("error").textContent = "Check the highlighted boxes. Notes look like E4, F#3 or Bb4."; return; }
     saveSong(song);
-    location.href = "./";
+    $("saved").textContent = "Saved. Lento will work on it in your next lesson.";
   };
 
   function esc(t) { return String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]); }
   render();
   drawSloths();
+  tabbar("song");
 </script>
 </body>
 </html>
