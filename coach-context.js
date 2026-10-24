@@ -2,6 +2,8 @@
 // these turn the numbers into short sentences the ElevenLabs agent can talk about.
 // No DOM or storage here, so it can be tested on its own.
 
+import { CAUSES } from "./cues.js";
+
 const pct = (hits, total) => (total ? Math.round((hits / total) * 100) : null);
 const MOOD_WORDS = { tired: "a bit tired", okay: "pretty good", great: "ready to sing" };
 
@@ -26,6 +28,9 @@ export function exerciseLine(e) {
   const issue = issueWords(e.issues);
   if (issue && p !== null && p < 80) parts.push(`tended to go ${issue}`);
   if (e.drills) parts.push(`we drilled it ${e.drills === 1 ? "once" : `${e.drills} times`}`);
+  // Why, as Lento diagnosed it during the drills
+  const why = Object.entries(e.causes ?? {}).sort((a, b) => b[1] - a[1]).map(([c]) => CAUSES[c]).filter(Boolean);
+  if (why.length) parts.push(`what you noticed: they ${why.slice(0, 2).join(", and ")}`);
   return parts.join(", ");
 }
 

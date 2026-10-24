@@ -11,6 +11,8 @@
 // The key server's address. Empty means the live coach is off and the app works as before.
 export const COACH_URL = "";
 
+import { speakAndWait, hush } from "./voice.js";
+
 const SDK = "https://cdn.jsdelivr.net/npm/@elevenlabs/client@1.26.0/+esm";
 const MAX_SECONDS = 180; // hang up after 3 minutes no matter what, to protect credits
 
@@ -82,7 +84,7 @@ const SCRIPTS = {
     await say(`Long days are exactly why we slow down. Let's go easy: gentle warm-ups, nothing too high, about ${minutes} minutes. Sound good?`);
     await hear("Yeah, let's do it.");
     await tool("set_lento_mood", { mood: "happy" });
-    await say("Pop in your earbuds. I'll sing each one first, then it's your turn.");
+    await say("Lovely. I'll sing each one first, then it's your turn. Here we go.");
     await tool("start_lesson", {});
   },
   debrief: async ({ say, hear, tool }) => {
@@ -108,7 +110,8 @@ function startMock({ moment, variables, tools, onLine, onMode, onStatus }) {
     variables,
     say: async (text) => {
       guard(); onMode("speaking"); onLine({ who: "lento", text });
-      await pause(900 + text.length * 45); guard();
+      // Practice mode speaks with the phone's voice, so it feels like a real voice chat
+      await Promise.all([speakAndWait(text), pause(900 + text.length * 30)]); guard();
     },
     hear: async (text) => {
       guard(); onMode("listening"); await pause(1400); guard();
@@ -129,7 +132,7 @@ function startMock({ moment, variables, tools, onLine, onMode, onStatus }) {
     if (!over) { over = true; onStatus("ended"); }
   }, 700);
   return {
-    end: () => { if (!over) { over = true; onStatus("ended"); } },
+    end: () => { if (!over) { over = true; hush(); onStatus("ended"); } },
     setMuted() {},
   };
 }

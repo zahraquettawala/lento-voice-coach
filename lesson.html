@@ -57,8 +57,8 @@
   .ex-head h2 { font-size: 24px; }
   .ex-head .sub { margin-top: 2px; }
   .lento { display: flex; gap: 12px; align-items: flex-end; }
-  .lento .art { width: 74px; height: 74px; flex: none; border-radius: 50%; background: var(--accent-soft); overflow: hidden; display: grid; place-items: center; }
-  .lento .art > div { width: 68px; height: 68px; margin-top: 8px; }
+  .lento .art { width: 72px; height: 86px; flex: none; }
+  .lento .art > div { width: 100%; height: 100%; }
   .bubble { flex: 1; background: var(--surface); border: 1px solid var(--line); border-radius: 16px 16px 16px 4px; padding: 10px 14px; box-shadow: var(--shadow); min-height: 62px; }
   .phase { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink); }
   .phase.demo { color: var(--accent-ink); } .phase.you { color: var(--ok); } .phase.fix { color: var(--low); }
@@ -118,7 +118,7 @@
     <div><button class="linkish" id="showPlan">See today's plan</button><button class="linkish" id="shuffle">Mix it up</button></div>
     <div class="error" id="error"></div>
     <button class="btn accent big" id="go">Let's sing</button>
-    <span class="sub" style="font-size:12.5px;color:var(--ink-3)">Wired earbuds work best</span>
+    <span class="sub" style="font-size:12.5px;color:var(--ink-3)">Earbuds give the most accurate scores</span>
   </div>
   <div class="grow-space"></div>
 </main>
@@ -149,7 +149,7 @@
     </div>
 
     <div class="lento">
-      <div class="art"><div id="mascot" data-sloth="happy" data-pose="head"></div></div>
+      <div class="art"><div id="mascot" data-sloth="happy"></div></div>
       <div class="bubble"><div class="phase" id="phase">Lento</div><div class="says" id="says">Here we go.</div></div>
     </div>
 
@@ -173,7 +173,6 @@
     <h2 id="nextName"></h2>
     <span class="sub" id="nextDesc"></span>
     <div class="ring"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" stroke="var(--line)"/><circle id="ringArc" cx="32" cy="32" r="29" stroke="var(--accent)" stroke-dasharray="182.2" stroke-dashoffset="0" stroke-linecap="round"/></svg><span id="count">4</span></div>
-    <button class="btn ghost" id="nextNow" style="height:42px">Start now</button>
   </div>
 </div>
 
@@ -182,7 +181,8 @@
   <div class="grow-space"></div>
   <div class="eyebrow">Lesson complete</div>
   <h1 id="doneTitle">You did it!</h1>
-  <div class="lento-big sway"><div data-sloth="proud"></div></div>
+  <div class="say fade-in" id="doneSay" hidden></div>
+  <div class="lento-big sway"><div id="doneLento" data-sloth="proud"></div></div>
   <div class="score" id="sumAcc">0%</div>
   <div class="sub" id="sumMeta">of notes on pitch</div>
   <div class="list" id="sumList" style="width:100%;text-align:left" hidden></div>
@@ -207,10 +207,10 @@
   import { speak, speakAndWait, hush, unlock } from "./voice.js";
   import { sheet } from "./ui.js";
   import { coachMode } from "./coach.js";
-  import { talkWithLento, faceMood, close as endTalk } from "./coach-ui.js";
+  import { talkWithLento, stopTalking } from "./coach-ui.js";
   import { historySummary, lessonSummary, planSummary, timeOfDay } from "./coach-context.js";
   import { sessions } from "./store.js";
-  import { tipFor } from "./tips.js";
+  import { diagnose, CUES, noteShape, phraseLevel } from "./cues.js";
 
   const NOTES = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
   const IN_TUNE_CENTS = 25;
@@ -235,7 +235,7 @@
   let kb = { lo: 48, hi: 71 }; // keyboard range for the current exercise
   let results = [];           // per exercise, for the summary and progress
   let lastLesson = null;      // how the last lesson went, for Lento's chat afterwards
-  let fixes = {};             // how often Lento has stopped for each problem this lesson, so tips vary
+  let levels = [];            // how loud each phrase was, to know what's quiet or loud for this singer
 
   const only = byId(new URLSearchParams(location.search).get("only"));
 
@@ -384,7 +384,7 @@
     if (stream) return true;
     try {
       stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+        audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: false },
       });
     } catch {
       $("error").textContent = "The microphone is blocked. In Safari, tap the \"aA\" button in the address bar, open Website Settings, set Microphone to Allow, then reload.";
@@ -405,10 +405,11 @@
     analyser.getFloatTimeDomainData(buffer);
     let sum = 0;
     for (let i = 0; i < buffer.length; i++) sum += buffer[i] * buffer[i];
-    const loud = 10 * Math.log10(sum / buffer.length + 1e-12) > LOUD_DB;
+    const db = 10 * Math.log10(sum / buffer.length + 1e-12);
+    const loud = db > LOUD_DB;
     const [hz, clarity] = detector.findPitch(buffer, ctx.sampleRate);
     const midi = clarity >= MIN_CLARITY && hz >= MIN_HZ && hz <= MAX_HZ ? midiFromHz(hz) : null;
-    return { midi, airy: loud && midi === null };
+    return { midi, airy: loud && midi === null, db };
   }
 
   const live = () => running && !skipping;
@@ -462,6 +463,12 @@
     if (bad.every((i) => i > results.length / 2)) return " on the way down";
     if (bad.every((i) => i < results.length / 2)) return " on the way up";
     return "";
+  }
+
+  // Where the misses were, as a short code for diagnose(): top, first, last, up, down
+  function spotOf(events, results, kind) {
+    const w = where(null, events, results, kind).trim();
+    return { "on the top note": "top", "on the first note": "first", "on the last note": "last", "on the way up": "up", "on the way down": "down" }[w] ?? "";
   }
 
   function verdict(ex, events, results) {
@@ -521,6 +528,7 @@
     if (withLento) for (const e of scored) singer.sing(e.midi, t + e.start * beat, e.beats * beat * 0.97, e.syll, withLento);
 
     const samples = scored.map(() => []), airy = scored.map(() => 0), seen = scored.map(() => 0);
+    const tracks = scored.map(() => []), dbs = []; // the shape of each note, and how loud you sang
     const lastEnd = Math.max(...scored.map((e) => e.start + e.beats));
     await frames(t + lastEnd * beat, (now) => {
       const pos = (now - t) / beat;
@@ -529,6 +537,10 @@
       const i = scored.findIndex((e) => pos >= e.start && pos < e.start + e.beats);
       const p = readPitch();
       lane.voice.push({ beat: pos, midi: p.midi, target: i >= 0 ? scored[i].midi : null });
+      if (i >= 0 && p.midi !== null) {
+        tracks[i].push({ f: (pos - scored[i].start) / scored[i].beats, midi: p.midi });
+        dbs.push(p.db);
+      }
       // Skip the first part of each note while the voice moves onto it
       if (i >= 0 && (pos - scored[i].start) / scored[i].beats > 0.3) {
         seen[i]++;
@@ -537,7 +549,8 @@
       }
     });
     if (!listen || !live()) return { results: null, next: t + beats * beat, scored };
-    const res = scored.map((e, i) => score(samples[i], e.midi, airy[i], seen[i]));
+    const res = scored.map((e, i) => ({ ...score(samples[i], e.midi, airy[i], seen[i]), shape: noteShape(tracks[i], e.midi) }));
+    res.db = dbs.length ? dbs.sort((a, b) => a - b)[Math.floor(dbs.length / 2)] : null;
     lane.results = res;
     lane.pos = null;
     return { results: res, next: t + beats * beat, scored };
@@ -548,7 +561,8 @@
     const beat = 60 / (ex.bpm * lesson.speed / 100);
     showBlock(i);
     await piano.preload(b.keys.flatMap((k) => layout(ex, k).events.map((e) => e.midi)));
-    const tally = { hits: 0, total: 0, drills: 0, issues: { low: 0, high: 0, breathy: 0 } };
+    const tally = { hits: 0, total: 0, drills: 0, issues: { low: 0, high: 0, breathy: 0 }, causes: {} };
+    let cause = null; // why the last phrase went wrong, so Lento doesn't repeat herself
 
     // 1. Lento demos the pattern once in the first key
     if (settings.demo && live()) {
@@ -584,10 +598,22 @@
         piano.stopAll(); singer.stopAll();
         if (!retries) { drills++; tally.drills++; }
         retries++;
-        const tip = retries === 1 ? tipFor(v.kind, fixes[v.kind] = (fixes[v.kind] ?? -1) + 1) : "";
-        coach(tip ? `${v.said} ${tip}` : v.said, { kind: v.kind, mood: "oops", phase: FIX });
+        // Work out why it went wrong, then pick the fix for that, like a voice teacher would
+        const missed = res.filter((r) => r.kind === v.kind);
+        const share = (shape) => missed.length ? missed.filter((r) => r.shape === shape).length / missed.length : 0;
+        const usual = levels.length ? levels.slice().sort((a, b) => a - b)[Math.floor(levels.length / 2)] : null;
+        const before = cause;
+        cause = diagnose({
+          kind: v.kind, spot: spotOf(scored, res, v.kind), scoop: share("scoop"), sag: share("sag"),
+          level: phraseLevel(res.db, usual), vowel: ex.sound, fast: ex.bpm * lesson.speed / 100 >= 100,
+          nearTop: b.keys.length > 2 && b.keys[loop] >= Math.max(...b.keys) - 1, nearBottom: !!ex.down,
+          late: i > 1 && i >= lesson.blocks.length - 2, stuck: retries > 1 && before?.startsWith({ low: "flat", high: "sharp", breathy: "breathy" }[v.kind]),
+        });
+        const cue = cause && cause !== before ? CUES[cause] : "";
+        if (cause) tally.causes[cause] = (tally.causes[cause] ?? 0) + 1;
+        coach(cue ? `${v.said} ${cue}` : v.said, { kind: v.kind, mood: "oops", phase: FIX });
         await talk(v.said);
-        if (tip) await talk(tip);
+        if (cue) await talk(cue);
         await talk(retries === 1 ? "Let's do that one again. I'll sing it with you." : "One more time.");
         t = ctx.currentTime + 0.3;
         continue;
@@ -600,7 +626,9 @@
         say(v.said);
       }
       setTimeout(() => live() && !paused && setMood($("mascot"), "sing"), 1400);
+      if (res.db !== null) levels.push(res.db);
       retries = 0;
+      cause = null;
       loop++;
     }
     return tally;
@@ -643,8 +671,6 @@
     $("nextName").textContent = ex.free ? `${ex.song}: ${ex.name}` : ex.name;
     $("nextDesc").textContent = ex.free ? `Starting note ${label(ex.start)}` : `“${ex.sound}” · ${ex.desc}`;
     $("upnext").hidden = false;
-    let go = false;
-    const tapped = new Promise((resolve) => ($("nextNow").onclick = () => { go = true; resolve(); }));
     const lines = {
       "Warm-up": first ? `Let's warm up your voice. First, ${ex.name.toLowerCase()}.` : `Next warm-up: ${ex.name.toLowerCase()}.`,
       Scales: `Now some scales. ${ex.name}.`,
@@ -655,12 +681,12 @@
     coach(line, { mood: "happy", phase: LENTO });
     const spoken = talk(line);
     const seconds = 4, start = ctx.currentTime;
-    await Promise.race([tapped, frames(start + seconds, (now) => {
+    await frames(start + seconds, (now) => {
       const left = seconds - (now - start);
       $("count").textContent = Math.max(1, Math.ceil(left));
       $("ringArc").style.strokeDashoffset = String(182.2 * (1 - left / seconds));
-    })]);
-    if (go) hush(); else await spoken;
+    });
+    await spoken;
     $("upnext").hidden = true;
   }
 
@@ -669,7 +695,7 @@
     $("error").textContent = "";
     unlock();
     if (!(await ensureAudio())) return;
-    running = true; paused = false; skipping = false; pausedMs = 0; results = []; fixes = {};
+    running = true; paused = false; skipping = false; pausedMs = 0; results = []; levels = [];
     setPauseLabel();
     $("checkin").hidden = true; $("done").hidden = true; $("stage").hidden = false;
     try { wakeLock ??= await navigator.wakeLock?.request("screen"); } catch {}
@@ -822,7 +848,7 @@
   const coachTools = {
     get_singer_history: () => historySummary(sessions()),
     get_lesson_results: () => lessonSummary(results, lastLesson ?? {}),
-    set_lento_mood: ({ mood: m }) => { faceMood(["happy", "sing", "proud", "oops", "sleepy"].includes(m) ? m : "happy"); return "ok"; },
+    set_lento_mood: () => "ok", // the talk bar changes her face
     // Build today's lesson from how they feel: tired, okay or great
     build_lesson: ({ mood: m }) => {
       mood = MOODS[m] ? m : "okay";
@@ -831,7 +857,7 @@
     },
     // Hang up and start singing
     start_lesson: () => {
-      setTimeout(() => { endTalk(); if (!running) start(); }, 1500); // let her finish the sentence
+      setTimeout(() => { stopTalking(); if (!running) start(); }, 1500); // let her finish the sentence
       return "Starting the lesson now.";
     },
   };
@@ -848,16 +874,27 @@
     unlock();
     if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
     ctx.resume();
-    await talkWithLento({
-      moment,
-      tools: coachTools,
-      variables: {
-        opening_line: opening(moment),
-        time_of_day: timeOfDay(),
-        history: historySummary(sessions()),
-        lesson_results: moment === "debrief" ? lessonSummary(results, lastLesson ?? {}) : "No lesson yet today.",
-      },
-    });
+    const checkin = moment === "checkin";
+    const variables = {
+      opening_line: opening(moment),
+      time_of_day: timeOfDay(),
+      history: historySummary(sessions()),
+      lesson_results: checkin ? "No lesson yet today." : lessonSummary(results, lastLesson ?? {}),
+    };
+    if (checkin) {
+      $("moods").hidden = true; $("talkIn").hidden = true;
+      await talkWithLento({ moment, variables, tools: coachTools, bubble: $("ask"), sloth: $("hello"), after: $("hello").closest(".lento-big") });
+      // Stopped before picking a lesson: back to the choices
+      if (!running && $("ready").hidden) {
+        $("ask").textContent = "How's your voice feeling today?";
+        $("moods").hidden = false; $("talkIn").hidden = false;
+        setMood($("hello"), "happy");
+      }
+    } else {
+      $("talkAfter").hidden = true;
+      await talkWithLento({ moment, variables, tools: coachTools, bubble: $("doneSay"), sloth: $("doneLento"), after: $("doneLento").closest(".lento-big") });
+      $("talkAfter").hidden = false;
+    }
   }
   $("talkIn").onclick = () => chatWithLento("checkin");
   $("talkAfter").onclick = () => chatWithLento("debrief");

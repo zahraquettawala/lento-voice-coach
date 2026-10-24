@@ -104,14 +104,54 @@ test("worker off switch and preflight", async () => {
   assert.equal(calls.length, 0);
 });
 
-// ---------- Tips during the lesson ----------
-import { tipFor, TIPS, ALL_TIPS } from "../tips.js";
+// ---------- Coaching cues during the lesson ----------
+import { diagnose, CUES, CAUSES, ALL_CUES, noteShape, phraseLevel } from "../cues.js";
 
-test("tips rotate when the same problem keeps happening", () => {
-  assert.equal(tipFor("low", 0), TIPS.low[0]);
-  assert.match(tipFor("low", 0), /eyebrows/);
-  assert.notEqual(tipFor("low", 1), tipFor("low", 0));
-  assert.equal(tipFor("high", TIPS.high.length), TIPS.high[0]);
-  assert.equal(tipFor("ok", 0), "");
-  assert.equal(new Set(ALL_TIPS).size, ALL_TIPS.length);
+test("Lento diagnoses why a phrase went flat before picking a cue", () => {
+  assert.equal(diagnose({ kind: "low", spot: "top" }), "flat-peak");
+  assert.equal(diagnose({ kind: "low", scoop: 0.6, spot: "top" }), "flat-scoop");
+  assert.equal(diagnose({ kind: "low", sag: 0.7 }), "flat-sag");
+  assert.equal(diagnose({ kind: "low", level: "quiet" }), "flat-quiet");
+  assert.equal(diagnose({ kind: "low", nearTop: true }), "flat-high");
+  assert.equal(diagnose({ kind: "low", vowel: "Hoo" }), "flat-dark");
+  assert.equal(diagnose({ kind: "low", late: true }), "flat-tired");
+  assert.equal(diagnose({ kind: "low", stuck: true, scoop: 1 }), "flat-stuck");
+  assert.match(CUES["flat-stuck"], /eyebrows/);
+});
+
+test("sharp and breathy have their own causes", () => {
+  assert.equal(diagnose({ kind: "high", fast: true, spot: "top" }), "sharp-fast");
+  assert.equal(diagnose({ kind: "high", level: "loud" }), "sharp-loud");
+  assert.equal(diagnose({ kind: "high", spot: "top" }), "sharp-peak");
+  assert.equal(diagnose({ kind: "high", nearBottom: true }), "sharp-low");
+  assert.equal(diagnose({ kind: "high" }), "sharp-tense");
+  assert.equal(diagnose({ kind: "breathy", spot: "first" }), "breathy-onset");
+  assert.equal(diagnose({ kind: "breathy", nearTop: true }), "breathy-high");
+  assert.equal(diagnose({ kind: "breathy" }), "breathy-air");
+  assert.equal(diagnose({ kind: "breathy", late: true, stuck: true }), "breathy-tired");
+  assert.equal(diagnose({ kind: "ok" }), null);
+});
+
+test("every cause has a cue and a plain-words explanation, and cues are unique", () => {
+  assert.deepEqual(Object.keys(CUES).sort(), Object.keys(CAUSES).sort());
+  assert.equal(new Set(ALL_CUES).size, ALL_CUES.length);
+});
+
+test("reading the shape of a note: scoops and sags", () => {
+  const T = 60;
+  const scoop = [0.1, 0.2, 0.3, 0.5, 0.7, 0.8, 0.9].map((f) => ({ f, midi: f < 0.35 ? T - 0.8 : T }));
+  const sag = [0.1, 0.2, 0.3, 0.5, 0.7, 0.8, 0.9].map((f) => ({ f, midi: f < 0.35 ? T : T - 0.5 }));
+  const steady = [0.1, 0.2, 0.3, 0.7, 0.8].map((f) => ({ f, midi: T + 0.05 }));
+  assert.equal(noteShape(scoop, T), "scoop");
+  assert.equal(noteShape(sag, T), "sag");
+  assert.equal(noteShape(steady, T), "");
+  assert.equal(noteShape(scoop.map((s) => ({ ...s, midi: s.midi + 12 })), T), "scoop", "an octave up still counts");
+  assert.equal(phraseLevel(-40, -30), "quiet");
+  assert.equal(phraseLevel(-20, -30), "loud");
+  assert.equal(phraseLevel(-30, null), "");
+});
+
+test("the chat afterwards hears why, not just the score", () => {
+  const line = exerciseLine({ id: "runs", name: "Fast runs", hits: 5, total: 10, issues: { low: 5 }, drills: 1, causes: { "flat-sag": 2 } });
+  assert.match(line, /drifted flat by the end of the note/);
 });
