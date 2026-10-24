@@ -20,16 +20,30 @@ Open **https://zahraquettawala.github.io/lento-voice-coach/** on your phone in S
 - **Your song** (`song.html`): the song you're practicing, with up to 3 sections, a starting note each, and an optional melody.
 - **Tuner** (`tuner.html`): the note you're singing against a target note, with a flat / on pitch / sharp meter.
 - **Progress** (`progress.html`): accuracy over recent lessons, accuracy per exercise, and history.
+- **Your privacy** (`privacy.html`, linked from Progress): what stays on the phone, and a button to delete your practice history.
 
-Three looks, picked in lesson settings: Night (default), Studio and Forest. Add it to your home screen in Safari (Share, then Add to Home Screen) and it opens full screen like an app.
+Six looks, picked in lesson settings: Neutral (the default), Sunny, Lemon, Studio, Night and Forest. Add it to your home screen in Safari (Share, then Add to Home Screen) and it opens full screen like an app.
 
 Wear wired earbuds so the mic hears you, not the piano. Within 25 cents of the target counts as on pitch, so vibrato isn't penalized.
 
 ## Code
 
-`exercises.js` is the exercise library, `lesson.js` builds each day's lesson, `song.js` stores your song, `store.js` saves lessons on the phone (localStorage), `piano.js` plays the grand piano, `sing.js` is Lento's singing voice for demos, `voice.js` is her speaking voice (the phone's built-in one for now), `sloth.js` draws her, `keys.js` draws the keyboard, `ui.js` is the tab bar, and `theme.css` is the design system. No build step. `warmup.html` redirects old links to the lesson.
+`exercises.js` is the exercise library, `lesson.js` builds each day's lesson, `song.js` stores your song, `store.js` saves lessons on the phone (localStorage), `piano.js` plays the grand piano, `sing.js` is Lento's singing voice for demos, `voice.js` is her speaking voice, `sloth.js` draws her, `keys.js` draws the keyboard, `ui.js` is the tab bar, and `theme.css` is the design system. No build step. `warmup.html` redirects old links to the lesson.
 
 Pitch detection runs in the browser with [Pitchy](https://github.com/ianprime0509/pitchy). The piano is the [Salamander Grand Piano](https://archive.org/details/SalamanderGrandPianoV3) (a Yamaha C5, CC-BY 3.0, Alexander Holm), via [Tone.js audio](https://github.com/Tonejs/audio). Nothing is recorded; practice history stays on your phone.
+
+## Lento's voice
+
+Lento speaks with an ElevenLabs voice (Irene). Her lines were recorded once and ship as audio files in `voice/`, so there's no server, no API key and no cost per use. `voice/lines.js` lists each recorded line and its file; `voice.js` plays the recording when a line matches (two recorded lines in a row work too) and falls back to the phone's built-in voice for anything not recorded yet. To add a line, drop the mp3 in `voice/` and add it to `voice/lines.js`.
+
+## Tests
+
+The app has no build step; `package.json` exists only for tests.
+
+- `npm test` runs the unit tests (`tests/unit.test.js`): lesson building for each mood, note and melody parsing, and checks that every recorded line has its file and still matches what the app says.
+- `npm run smoke` opens every screen in a phone-sized Chromium with a fake microphone, starts a lesson, and fails on any JavaScript error (`tests/smoke.js`). Add `-- --shots <folder>` to save screenshots.
+
+Both run on every pull request (`.github/workflows/test.yml`).
 
 Design notes and the redesign plan are in [docs/lento-redesign.md](docs/lento-redesign.md).
 
