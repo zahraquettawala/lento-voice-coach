@@ -24,6 +24,7 @@
   .row svg { flex: none; color: var(--accent-ink); align-self: flex-start; margin-top: 2px; }
   #wipe { width: 100%; }
 </style>
+<script type="module" src="analytics.js"></script>
 </head>
 <body>
 <main class="app">
@@ -43,7 +44,9 @@
     <div class="row"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 15l3.5-4 3 2.5L19 8"/></svg>
       <span class="grow"><div class="title">Your progress stays on your phone</div><div class="meta">Lesson scores, your song and your settings are saved in this browser only. There are no accounts, and nobody else can see them.</div></span></div>
     <div class="row"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>
-      <span class="grow"><div class="title">No tracking or ads</div><div class="meta">Lento doesn't use analytics, cookies or ads. Like any website, the app loads its fonts from Google Fonts and its pitch detector from jsDelivr, which see a normal web request.</div></span></div>
+      <span class="grow"><div class="title">Anonymous counts, no ads</div><div class="meta">Lento counts things like visits, finished lessons and errors with PostHog, under a random id, so we can make it better. That never includes your singing or your name. No cookies, no ads. Like any website, the app also loads its fonts from Google Fonts and its pitch detector from jsDelivr.</div></span></div>
+    <div class="row"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+      <span class="grow"><div class="title">Your email, only if you share it</div><div class="meta">If you leave your email with feedback, it's kept with your feedback and lesson counts in PostHog and used only to reply or send Lento news. <a href="feedback.html" style="color: var(--accent-ink); font-weight: 600">Ask</a> and it's deleted.</div></span></div>
   </div>
 
   <section class="section">

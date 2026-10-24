@@ -21,6 +21,7 @@ Open **https://zahraquettawala.github.io/lento-voice-coach/** on your phone in S
 - **Tuner** (`tuner.html`): the note you're singing against a target note, with a flat / on pitch / sharp meter.
 - **Progress** (`progress.html`): accuracy over recent lessons, accuracy per exercise, and history.
 - **Your privacy** (`privacy.html`, linked from Progress): what stays on the phone, and a button to delete your practice history.
+- **Send feedback** (`feedback.html`, linked from Progress): the same thumbs up/down card that shows at the end of a lesson, with an optional note and an optional email if it's OK to reply.
 
 Six looks, picked in lesson settings: Neutral (the default), Sunny, Lemon, Studio, Night and Forest. Add it to your home screen in Safari (Share, then Add to Home Screen) and it opens full screen like an app.
 
@@ -35,6 +36,10 @@ Pitch detection runs in the browser with [Pitchy](https://github.com/ianprime050
 ## Lento's voice
 
 Lento speaks with an ElevenLabs voice (Irene). Her lines were recorded once and ship as audio files in `voice/`, so there's no server, no API key and no cost per use. `voice/lines.js` lists each recorded line and its file; `voice.js` plays the recording when a line matches (two recorded lines in a row work too) and falls back to the phone's built-in voice for anything not recorded yet. To add a line, drop the mp3 in `voice/` and add it to `voice/lines.js`.
+
+## Usage and feedback
+
+`analytics.js` sends anonymous counts to [PostHog](https://posthog.com): page views, saved lessons (minutes, mood, accuracy), whether the mic was allowed, and JavaScript errors. No audio, no cookies (a random id in localStorage), no autocapture. It's off until `POSTHOG_KEY` is set, and always off in tests and on localhost. `feedback.js` sends feedback to a PostHog survey (`FEEDBACK_SURVEY_ID`); if someone leaves an email, it's saved on their PostHog profile so their feedback sits next to their lessons.
 
 ## Tests
 

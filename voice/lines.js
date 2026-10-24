@@ -4,7 +4,6 @@ export const LINES = {
   "Hi, I'm Lento, your vocal coach. Lento means slow, and that's the idea: slow down, take a breath, and make a little time for singing.": "hi-i-m-lento-your-vocal-coach-lento-means-slow-a.mp3",
   "In every lesson, I sing each exercise first. Then it's your turn, and I'll play piano with you.": "in-every-lesson-i-sing-each-exercise-first-then.mp3",
   "I listen while you sing. If something's a little off, we'll practice it together until it's right.": "i-listen-while-you-sing-if-something-s-a-little.mp3",
-  "Pop in your earbuds, and let's sing!": "pop-in-your-earbuds-and-let-s-sing.mp3",
   "Listen first.": "listen-first.mp3",
   "Your turn.": "your-turn.mp3",
   "That's it! Keep going.": "that-s-it-keep-going.mp3",

@@ -1,6 +1,8 @@
 // Practice history, saved only on this phone.
 // A session: { at: ISO time, minutes, mood?, exercises: [{ id, name, hits, total }] }
 
+import { track } from "./analytics.js";
+
 const KEY = "lentoSessions";
 const OLD_KEY = "mariahSessions"; // from before the app was renamed Lento
 
@@ -20,6 +22,10 @@ export function saveSession(session) {
   const all = sessions();
   all.push(session);
   try { localStorage.setItem(KEY, JSON.stringify(all.slice(-200))); } catch {}
+  track("lesson_saved", {
+    minutes: Math.round(session.minutes * 10) / 10, mood: session.mood, accuracy: accuracy(session),
+    exercises: session.exercises.length, lesson_number: all.length,
+  });
 }
 
 export const accuracy = (s) => {

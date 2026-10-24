@@ -59,6 +59,12 @@ await open("song", "song.html");
 await open("tuner", "tuner.html");
 await open("progress", "progress.html");
 await open("privacy", "privacy.html", async (p) => { await p.locator("#wipe").click(); await p.locator("#wipe").click(); });
+await open("feedback", "feedback.html?preview", async (p) => {
+  await p.locator(".fb .up").click();
+  await p.locator(".fb textarea").fill("Loved the piano");
+  await p.locator(".fb .btn").click();
+  await p.getByText("Thank you!").waitFor();
+});
 await open("lesson", "lesson.html", async (p) => {
   const voice = p.waitForResponse((r) => /\/voice\/.+\.mp3$/.test(r.url()), { timeout: 15000 }).catch(() => null);
   await p.locator("#moods .choice").first().click();

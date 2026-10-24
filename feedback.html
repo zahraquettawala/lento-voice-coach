@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("lentoTheme")||"neutral"}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lento">
+<meta name="theme-color" content="#f6f5f2">
+<title>Send feedback · Lento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<link rel="icon" href="sloth.svg">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+  .head { display: flex; align-items: center; gap: 12px; }
+  .art { width: 150px; height: 180px; margin: 0 auto; }
+</style>
+<script type="module" src="analytics.js"></script>
+</head>
+<body>
+<main class="app">
+  <div class="head">
+    <a class="icon-btn" href="progress.html" aria-label="Back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <div>
+      <div class="eyebrow">Lento</div>
+      <h1>Send feedback</h1>
+    </div>
+  </div>
+  <div class="art sway" data-sloth="happy"></div>
+  <p class="sub" style="text-align:center">Lento is new, and your notes shape what she learns next. Something confusing, a bug, an idea: all of it helps.</p>
+  <div id="slot"></div>
+</main>
+
+<script type="module">
+  import { drawSloths } from "./sloth.js";
+  import { tabbar } from "./ui.js";
+  import { analyticsOn } from "./analytics.js";
+  import { feedbackCard } from "./feedback.js";
+
+  const slot = document.getElementById("slot");
+  if (analyticsOn || new URLSearchParams(location.search).has("preview")) slot.append(feedbackCard({ where: "feedback page", question: "How's Lento working for you?" }));
+  else slot.innerHTML = `<p class="hint" style="text-align:center">Feedback isn't switched on yet. Check back soon.</p>`;
+
+  drawSloths();
+  tabbar("progress");
+</script>
+</body>
+</html>
