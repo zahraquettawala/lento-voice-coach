@@ -11,7 +11,8 @@
           "opening_line": "Hi, I'm Lento, your vocal coach. How's your voice feeling today?",
           "time_of_day": "evening",
           "history": "This is their first lesson with you. You don't know their voice yet.",
-          "lesson_results": "No lesson yet today."
+          "lesson_results": "No lesson yet today.",
+          "lento_user": ""
         }
       },
       "prompt": {
@@ -27,9 +28,19 @@
             "parameters": {
               "type": "object",
               "properties": {
-                "mood": { "type": "string", "enum": ["tired", "okay", "great"], "description": "tired: gentle warm-ups, smaller range, slower. okay: a normal lesson. great: wider range and fast runs." }
+                "mood": {
+                  "type": "string",
+                  "enum": [
+                    "tired",
+                    "okay",
+                    "great"
+                  ],
+                  "description": "tired: gentle warm-ups, smaller range, slower. okay: a normal lesson. great: wider range and fast runs."
+                }
               },
-              "required": ["mood"]
+              "required": [
+                "mood"
+              ]
             }
           },
           {
@@ -38,7 +49,10 @@
             "description": "Ends the conversation and starts the lesson in the app. Only call after the singer says they're ready.",
             "expects_response": true,
             "response_timeout_secs": 5,
-            "parameters": { "type": "object", "properties": {} }
+            "parameters": {
+              "type": "object",
+              "properties": {}
+            }
           },
           {
             "type": "client",
@@ -46,7 +60,10 @@
             "description": "A summary of the singer's recent lessons: last lesson, strongest and weakest exercises, and the accuracy trend.",
             "expects_response": true,
             "response_timeout_secs": 5,
-            "parameters": { "type": "object", "properties": {} }
+            "parameters": {
+              "type": "object",
+              "properties": {}
+            }
           },
           {
             "type": "client",
@@ -54,7 +71,10 @@
             "description": "Scores from the lesson that just finished: overall accuracy and, per exercise, percent on pitch, whether it tended flat, sharp or breathy, and how often it was drilled.",
             "expects_response": true,
             "response_timeout_secs": 5,
-            "parameters": { "type": "object", "properties": {} }
+            "parameters": {
+              "type": "object",
+              "properties": {}
+            }
           },
           {
             "type": "client",
@@ -64,14 +84,32 @@
             "parameters": {
               "type": "object",
               "properties": {
-                "mood": { "type": "string", "enum": ["happy", "proud", "sleepy", "oops", "sing"], "description": "proud for good news, sleepy when they're tired, sing right before the lesson" }
+                "mood": {
+                  "type": "string",
+                  "enum": [
+                    "happy",
+                    "proud",
+                    "sleepy",
+                    "oops",
+                    "sing"
+                  ],
+                  "description": "proud for good news, sleepy when they're tired, sing right before the lesson"
+                }
               },
-              "required": ["mood"]
+              "required": [
+                "mood"
+              ]
             }
           }
         ],
         "built_in_tools": {
-          "end_call": { "name": "end_call", "description": "End the chat after saying goodbye.", "params": { "system_tool_type": "end_call" } }
+          "end_call": {
+            "name": "end_call",
+            "description": "End the chat after saying goodbye.",
+            "params": {
+              "system_tool_type": "end_call"
+            }
+          }
         }
       }
     },
@@ -86,7 +124,11 @@
   "platform_settings": {
     "auth": {
       "enable_auth": true,
-      "allowlist": [{ "hostname": "zahraquettawala.github.io" }]
+      "allowlist": [
+        {
+          "hostname": "zahraquettawala.github.io"
+        }
+      ]
     }
   }
 }

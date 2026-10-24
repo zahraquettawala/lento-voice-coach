@@ -33,13 +33,14 @@ The live coach stays hidden until `COACH_URL` in `coach.js` is set, so merging t
 - Lento only connects while you're talking with her, never during singing.
 - Each chat hangs up after 3 minutes (in the agent and in the app).
 - The key server allows 6 chats per person per day and 40 for everyone (change in `wrangler.toml`), and `COACH_ON = "off"` switches it all off at once.
+- A daily dollar budget (`DAILY_BUDGET_USD`, default $3). ElevenLabs reports each finished chat to the key server's `/webhook` (signature checked), which adds it to today's spend and logs `coach_conversation` (seconds, estimated cost, who, how it ended) to PostHog. At 80% it sends `coach_budget_warning`, at 100% `coach_budget_reached`, and new chats are refused until tomorrow.
 - The ElevenLabs key lives only in Cloudflare as a secret. It's never in the app or this repo.
 - The agent only accepts connections from the Lento site.
 
 ## Going live (only with Zahra's OK; uses ElevenLabs credits)
 
 1. Create the agent from `agent.json` and `prompt.md`, with Irene's voice id.
-2. Make a free Cloudflare account, then in `coach/worker`: `npx wrangler kv namespace create LIMITS` (paste the id into `wrangler.toml`), add `AGENT_ID` to `wrangler.toml`, `npx wrangler secret put ELEVENLABS_API_KEY`, `npx wrangler deploy`.
+2. Make a free Cloudflare account, then in `coach/worker`: `npx wrangler kv namespace create LIMITS` (paste the id into `wrangler.toml`), add `AGENT_ID` to `wrangler.toml`, `npx wrangler secret put ELEVENLABS_API_KEY`, `npx wrangler deploy`. Then in ElevenLabs, add a post-call webhook pointing at `https://<worker>/webhook` and save its secret with `npx wrangler secret put WEBHOOK_SECRET`. Paste the PostHog project key into `POSTHOG_KEY`.
 3. Put the worker's address in `COACH_URL` in `coach.js`.
 4. Test slowly: one short chat, check the ElevenLabs usage page, then the next.
 

@@ -44,14 +44,14 @@ export async function startCoach({ moment, variables, tools, onLine, onMode, onS
       onStatus("error", why);
       return { end() {}, setMuted() {} };
     }
-    const { token } = await res.json();
+    const { token, person } = await res.json();
 
     // 2. Connect. WebRTC gives the best echo cancellation on iPhone.
     const { Conversation } = await import(SDK);
     session = await Conversation.startSession({
       conversationToken: token,
       connectionType: "webrtc",
-      dynamicVariables: { moment, ...variables },
+      dynamicVariables: { moment, ...variables, lento_user: person ?? "" }, // lento_user lets the cost log count chats per person
       clientTools: tools,
       onMessage: ({ message, role, source }) => onLine({ who: (role ?? (source === "ai" ? "agent" : "user")) === "agent" ? "lento" : "you", text: message }),
       onModeChange: ({ mode }) => onMode(mode),

@@ -76,7 +76,9 @@ test("worker hands out a token and never sends the key to the phone", async () =
   const res = await worker.fetch(req(), env());
   assert.equal(res.status, 200);
   const body = await res.text();
-  assert.deepEqual(JSON.parse(body), { token: "tok_123" });
+  const out = JSON.parse(body);
+  assert.equal(out.token, "tok_123");
+  assert.match(out.person, /^[0-9a-f]{24}$/, "a daily hash, not the IP");
   assert.ok(!body.includes("sk_test"));
   assert.equal(res.headers.get("Access-Control-Allow-Origin"), "https://zahraquettawala.github.io");
   assert.equal(calls.length, 1);
@@ -102,6 +104,66 @@ test("worker off switch and preflight", async () => {
   assert.equal((await worker.fetch(req(undefined, undefined, "OPTIONS"), env())).status, 204);
   assert.equal((await worker.fetch(req(undefined, undefined, "GET", "/other"), env())).status, 404);
   assert.equal(calls.length, 0);
+});
+
+// ---------- Cost tracking: ElevenLabs' post-call webhook ----------
+async function signedCall(seconds, secret = "whsec_test", { t = Math.floor(Date.now() / 1000), user = "abc", tamper = false } = {}) {
+  const body = JSON.stringify({ type: "post_call_transcription", data: { metadata: { call_duration_secs: seconds, cost: 500, termination_reason: "end_call" },
+    conversation_initiation_client_data: { dynamic_variables: { lento_user: user, moment: "debrief" } } } });
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const mac = [...new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${t}.${body}`)))].map((b) => b.toString(16).padStart(2, "0")).join("");
+  return new Request("https://lento-coach.example.workers.dev/webhook", { method: "POST", body: tamper ? body.replace("abc", "xyz") : body,
+    headers: { "ElevenLabs-Signature": `t=${t},v0=${mac}` } });
+}
+
+function fakePosthog() {
+  const events = [];
+  globalThis.fetch = async (url, init) => {
+    if (String(url).includes("posthog")) events.push(JSON.parse(init.body));
+    else events.push({ event: "ELEVENLABS", url: String(url) });
+    return new Response(JSON.stringify({ token: "tok_123" }), { status: 200 });
+  };
+  return events;
+}
+
+test("webhook rejects unsigned, tampered or stale calls", async () => {
+  const events = fakePosthog();
+  const e = env({ WEBHOOK_SECRET: "whsec_test", POSTHOG_KEY: "phc_test" });
+  assert.equal((await worker.fetch(await signedCall(60, "wrong"), e)).status, 401);
+  assert.equal((await worker.fetch(await signedCall(60, undefined, { tamper: true }), e)).status, 401);
+  assert.equal((await worker.fetch(await signedCall(60, undefined, { t: Math.floor(Date.now() / 1000) - 3600 }), e)).status, 401);
+  assert.equal(events.length, 0);
+  assert.equal(e.LIMITS.m.size, 0);
+});
+
+test("each chat is logged with its cost, and the budget warns, then stops new chats", async () => {
+  const events = fakePosthog();
+  const e = env({ WEBHOOK_SECRET: "whsec_test", POSTHOG_KEY: "phc_test", DAILY_BUDGET_USD: "0.4", PER_PERSON_DAILY: "99", ALL_DAILY: "99" });
+  assert.equal((await worker.fetch(await signedCall(150), e)).status, 200); // 2.5 min = $0.20
+  const first = events.find((x) => x.event === "coach_conversation");
+  assert.equal(first.distinct_id, "abc");
+  assert.equal(first.properties.seconds, 150);
+  assert.equal(first.properties.est_cost_usd, 0.2);
+  assert.equal(first.properties.ended_by, "end_call");
+  assert.equal(first.api_key, "phc_test");
+  await worker.fetch(await signedCall(120), e); // $0.36 total, past 80%
+  assert.equal(events.filter((x) => x.event === "coach_budget_warning").length, 1);
+  assert.equal((await worker.fetch(req(), e)).status, 200, "still under budget");
+  await worker.fetch(await signedCall(60), e); // $0.44, over
+  await worker.fetch(await signedCall(60), e);
+  assert.equal(events.filter((x) => x.event === "coach_budget_reached").length, 1, "warned once, not every call");
+  assert.equal(events.filter((x) => x.event === "coach_budget_warning").length, 1);
+  const calls = events.filter((x) => x.event === "ELEVENLABS").length;
+  assert.equal((await worker.fetch(req(), e)).status, 429, "no new chats once the budget is spent");
+  assert.equal(events.filter((x) => x.event === "ELEVENLABS").length, calls);
+});
+
+test("no PostHog key, no logging, but the budget still counts", async () => {
+  const events = fakePosthog();
+  const e = env({ WEBHOOK_SECRET: "whsec_test" });
+  assert.equal((await worker.fetch(await signedCall(60), e)).status, 200);
+  assert.equal(events.length, 0);
+  assert.equal([...e.LIMITS.m.entries()].find(([k]) => k.startsWith("usd:"))[1], "0.08");
 });
 
 // ---------- Coaching cues during the lesson ----------
