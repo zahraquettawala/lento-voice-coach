@@ -1,0 +1,92 @@
+{
+  "_note": "Lento's ElevenLabs agent. The prompt text lives in prompt.md and is pasted in when the agent is created. IRENE_VOICE_ID is filled in from Zahra's ElevenLabs voice library at that point.",
+  "name": "Lento",
+  "conversation_config": {
+    "agent": {
+      "first_message": "{{opening_line}}",
+      "language": "en",
+      "dynamic_variables": {
+        "dynamic_variable_placeholders": {
+          "moment": "checkin",
+          "opening_line": "Hi, I'm Lento, your vocal coach. How's your voice feeling today?",
+          "time_of_day": "evening",
+          "history": "This is their first lesson with you. You don't know their voice yet.",
+          "lesson_results": "No lesson yet today."
+        }
+      },
+      "prompt": {
+        "prompt": "(contents of prompt.md)",
+        "temperature": 0.5,
+        "tools": [
+          {
+            "type": "client",
+            "name": "build_lesson",
+            "description": "Builds today's vocal lesson from how the singer feels and returns the plan in words.",
+            "expects_response": true,
+            "response_timeout_secs": 5,
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "mood": { "type": "string", "enum": ["tired", "okay", "great"], "description": "tired: gentle warm-ups, smaller range, slower. okay: a normal lesson. great: wider range and fast runs." }
+              },
+              "required": ["mood"]
+            }
+          },
+          {
+            "type": "client",
+            "name": "start_lesson",
+            "description": "Ends the conversation and starts the lesson in the app. Only call after the singer says they're ready.",
+            "expects_response": true,
+            "response_timeout_secs": 5,
+            "parameters": { "type": "object", "properties": {} }
+          },
+          {
+            "type": "client",
+            "name": "get_singer_history",
+            "description": "A summary of the singer's recent lessons: last lesson, strongest and weakest exercises, and the accuracy trend.",
+            "expects_response": true,
+            "response_timeout_secs": 5,
+            "parameters": { "type": "object", "properties": {} }
+          },
+          {
+            "type": "client",
+            "name": "get_lesson_results",
+            "description": "Scores from the lesson that just finished: overall accuracy and, per exercise, percent on pitch, whether it tended flat, sharp or breathy, and how often it was drilled.",
+            "expects_response": true,
+            "response_timeout_secs": 5,
+            "parameters": { "type": "object", "properties": {} }
+          },
+          {
+            "type": "client",
+            "name": "set_lento_mood",
+            "description": "Changes Lento's face on screen.",
+            "expects_response": false,
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "mood": { "type": "string", "enum": ["happy", "proud", "sleepy", "oops", "sing"], "description": "proud for good news, sleepy when they're tired, sing right before the lesson" }
+              },
+              "required": ["mood"]
+            }
+          }
+        ],
+        "built_in_tools": {
+          "end_call": { "name": "end_call", "description": "End the chat after saying goodbye.", "params": { "system_tool_type": "end_call" } }
+        }
+      }
+    },
+    "tts": {
+      "voice_id": "IRENE_VOICE_ID",
+      "model_id": "eleven_flash_v2_5"
+    },
+    "conversation": {
+      "max_duration_seconds": 180
+    }
+  },
+  "platform_settings": {
+    "auth": {
+      "enable_auth": true,
+      "allowlist": [{ "hostname": "zahraquettawala.github.io" }]
+    }
+  }
+}

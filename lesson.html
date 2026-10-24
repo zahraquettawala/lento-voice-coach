@@ -24,6 +24,7 @@
   #checkin .lento-big { width: 170px; height: 204px; }
   #checkin .say { font-size: 18px; }
   #checkin .btn { width: 100%; }
+  .talk-btn { margin-top: 2px; }
   .linkish { font-size: 14px; font-weight: 600; color: var(--accent-ink); padding: 6px 10px; }
   .plan { width: 100%; text-align: left; }
   .plan .row { padding: 11px 16px; }
@@ -108,6 +109,7 @@
 
   <!-- Step 1: how are you feeling -->
   <div class="choices" id="moods"></div>
+  <button class="btn ghost big talk-btn" id="talkIn" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Or just tell Lento</button>
 
   <!-- Step 2: today's plan, folded away -->
   <div id="ready" hidden style="width:100%;display:flex;flex-direction:column;gap:10px;align-items:center">
@@ -186,6 +188,7 @@
   <div class="list" id="sumList" style="width:100%;text-align:left" hidden></div>
   <button class="linkish" id="showSum">See each exercise</button>
   <div class="grow-space"></div>
+  <button class="btn ghost big talk-btn" id="talkAfter" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Talk it through with Lento</button>
   <a class="btn accent big" href="./">Continue</a>
   <a class="linkish" href="progress.html">See your progress</a>
 </main>
@@ -203,6 +206,11 @@
   import { drawKeys, keyRange } from "./keys.js";
   import { speak, speakAndWait, hush, unlock } from "./voice.js";
   import { sheet } from "./ui.js";
+  import { coachMode } from "./coach.js";
+  import { talkWithLento, faceMood, close as endTalk } from "./coach-ui.js";
+  import { historySummary, lessonSummary, planSummary, timeOfDay } from "./coach-context.js";
+  import { sessions } from "./store.js";
+  import { tipFor } from "./tips.js";
 
   const NOTES = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
   const IN_TUNE_CENTS = 25;
@@ -226,6 +234,8 @@
   let lane = null;            // what the pitch lane is showing
   let kb = { lo: 48, hi: 71 }; // keyboard range for the current exercise
   let results = [];           // per exercise, for the summary and progress
+  let lastLesson = null;      // how the last lesson went, for Lento's chat afterwards
+  let fixes = {};             // how often Lento has stopped for each problem this lesson, so tips vary
 
   const only = byId(new URLSearchParams(location.search).get("only"));
 
@@ -253,6 +263,7 @@
     $("ask").textContent = line;
     $("ask").classList.remove("fade-in"); void $("ask").offsetWidth; $("ask").classList.add("fade-in");
     $("moods").hidden = true;
+    $("talkIn").hidden = true;
     $("ready").hidden = false;
     $("ready").classList.add("fade-in");
     $("steps").children[1].classList.add("on");
@@ -260,6 +271,7 @@
       if (only) return;
       e.preventDefault();
       $("ready").hidden = true; $("moods").hidden = false; $("plan").hidden = true;
+      $("talkIn").hidden = !coachMode();
       $("steps").children[1].classList.remove("on");
       $("ask").textContent = "How's your voice feeling today?";
       renderMoods();
@@ -536,7 +548,7 @@
     const beat = 60 / (ex.bpm * lesson.speed / 100);
     showBlock(i);
     await piano.preload(b.keys.flatMap((k) => layout(ex, k).events.map((e) => e.midi)));
-    const tally = { hits: 0, total: 0 };
+    const tally = { hits: 0, total: 0, drills: 0, issues: { low: 0, high: 0, breathy: 0 } };
 
     // 1. Lento demos the pattern once in the first key
     if (settings.demo && live()) {
@@ -561,6 +573,7 @@
       const v = verdict(ex, scored, res);
       tally.hits += res.filter((r) => r.kind === "ok").length;
       tally.total += res.length;
+      for (const r of res) if (r.kind in tally.issues) tally.issues[r.kind]++;
       const chip = document.createElement("span");
       chip.className = v.kind;
       $("history").append(chip);
@@ -569,10 +582,13 @@
       // Live coaching: stop, say what happened, and sing that phrase again together until it's right
       if (settings.drill && v.drill && drills < MAX_DRILLS && retries < MAX_RETRIES) {
         piano.stopAll(); singer.stopAll();
-        if (!retries) drills++;
+        if (!retries) { drills++; tally.drills++; }
         retries++;
-        coach(v.said, { kind: v.kind, mood: "oops", phase: FIX });
-        await talk(retries === 1 ? `${v.said} Let's do that one again. I'll sing it with you.` : `${v.said} One more time.`);
+        const tip = retries === 1 ? tipFor(v.kind, fixes[v.kind] = (fixes[v.kind] ?? -1) + 1) : "";
+        coach(tip ? `${v.said} ${tip}` : v.said, { kind: v.kind, mood: "oops", phase: FIX });
+        await talk(v.said);
+        if (tip) await talk(tip);
+        await talk(retries === 1 ? "Let's do that one again. I'll sing it with you." : "One more time.");
         t = ctx.currentTime + 0.3;
         continue;
       }
@@ -653,7 +669,7 @@
     $("error").textContent = "";
     unlock();
     if (!(await ensureAudio())) return;
-    running = true; paused = false; skipping = false; pausedMs = 0; results = [];
+    running = true; paused = false; skipping = false; pausedMs = 0; results = []; fixes = {};
     setPauseLabel();
     $("checkin").hidden = true; $("done").hidden = true; $("stage").hidden = false;
     try { wakeLock ??= await navigator.wakeLock?.request("screen"); } catch {}
@@ -674,6 +690,7 @@
       }
     }
     const finished = running;
+    lastLesson = { finished, mood, minutes: (Date.now() - began - pausedMs) / 60000 };
     if (results.length) saveSession({ at: new Date().toISOString(), minutes: (Date.now() - began - pausedMs) / 60000, mood, exercises: results });
     teardown();
     if (finished || results.length) showDone(finished);
@@ -692,6 +709,7 @@
     }).join("");
     $("sumList").hidden = true;
     $("showSum").hidden = !results.length;
+    $("talkAfter").hidden = !coachMode() || !results.length;
     $("doneTitle").textContent = finished ? oneOf(["You did it!", "Beautiful work!", "That's a lesson!"]) : "Nice singing!";
     if (finished) confetti();
     window.scrollTo(0, 0);
@@ -797,6 +815,53 @@
   $("pause").onclick = togglePause;
   $("skip").onclick = skip;
   $("end").onclick = () => { if (running) { skip(); running = false; } };
+
+  // ---------- Lento, live ----------
+  // The app functions the coach can use. The agent decides when to call them; each returns
+  // plain words the agent can talk about.
+  const coachTools = {
+    get_singer_history: () => historySummary(sessions()),
+    get_lesson_results: () => lessonSummary(results, lastLesson ?? {}),
+    set_lento_mood: ({ mood: m }) => { faceMood(["happy", "sing", "proud", "oops", "sleepy"].includes(m) ? m : "happy"); return "ok"; },
+    // Build today's lesson from how they feel: tired, okay or great
+    build_lesson: ({ mood: m }) => {
+      mood = MOODS[m] ? m : "okay";
+      showReady(MOODS[mood].line);
+      return planSummary(lesson, label);
+    },
+    // Hang up and start singing
+    start_lesson: () => {
+      setTimeout(() => { endTalk(); if (!running) start(); }, 1500); // let her finish the sentence
+      return "Starting the lesson now.";
+    },
+  };
+
+  function opening(moment) {
+    if (moment === "debrief") return "That's your lesson! How did that feel?";
+    const n = sessions().length;
+    return n ? `Good ${timeOfDay()}! Nice to see you again. How's your voice feeling today?`
+      : `Hi, I'm Lento, your vocal coach. Before we start, how's your voice feeling today?`;
+  }
+
+  async function chatWithLento(moment) {
+    // Unlock sound now, while we still have the tap, so the lesson can start hands-free later
+    unlock();
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    ctx.resume();
+    await talkWithLento({
+      moment,
+      tools: coachTools,
+      variables: {
+        opening_line: opening(moment),
+        time_of_day: timeOfDay(),
+        history: historySummary(sessions()),
+        lesson_results: moment === "debrief" ? lessonSummary(results, lastLesson ?? {}) : "No lesson yet today.",
+      },
+    });
+  }
+  $("talkIn").onclick = () => chatWithLento("checkin");
+  $("talkAfter").onclick = () => chatWithLento("debrief");
+  $("talkIn").hidden = !coachMode() || !!only;
 
   // For automated tests: ?debug exposes what the lane is showing
   if (new URLSearchParams(location.search).has("debug")) window.lento = { get lane() { return lane; } };
