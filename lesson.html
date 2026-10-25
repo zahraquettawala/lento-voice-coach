@@ -208,6 +208,7 @@
   import { speak, speakAndWait, hush, unlock } from "./voice.js";
   import { sheet } from "./ui.js";
   import { coachMode } from "./coach.js";
+  import { track } from "./analytics.js";
   import { talkWithLento, stopTalking } from "./coach-ui.js";
   import { historySummary, lessonSummary, planSummary, timeOfDay } from "./coach-context.js";
   import { sessions } from "./store.js";
@@ -234,6 +235,7 @@
   let lesson = null;
   let lane = null;            // what the pitch lane is showing
   let kb = { lo: 48, hi: 71 }; // keyboard range for the current exercise
+  let current = null;         // the exercise that's on now
   let results = [];           // per exercise, for the summary and progress
   let lastLesson = null;      // how the last lesson went, for Lento's chat afterwards
   let levels = [];            // how loud each phrase was, to know what's quiet or loud for this singer
@@ -253,6 +255,7 @@
       `<button class="choice" data-mood="${id}"><span class="ic">${MOOD_ICONS[id]}</span><span class="grow"><div>${m.label}</div><div class="hint-line">${m.hint}</div></span><span class="chev">›</span></button>`).join("");
     $("moods").querySelectorAll(".choice").forEach((b) => (b.onclick = () => {
       mood = b.dataset.mood;
+      track("checkin_mood", { mood, via: "tap" });
       b.setAttribute("aria-pressed", "true");
       setTimeout(() => showReady(MOODS[mood].line), 180);
     }));
@@ -704,6 +707,7 @@
 
     for (let i = 0; i < lesson.blocks.length && running; i++) {
       const b = lesson.blocks[i];
+      current = b.ex;
       skipping = false;
       showBlock(i);
       lane = null;
@@ -800,6 +804,7 @@
     if (!running) return;
     if (paused) togglePause();
     skipping = true;
+    if (current) track("exercise_skipped", { id: current.id, section: current.kind });
     piano.stopAll(); singer.stopAll(); hush();
   }
 
@@ -853,6 +858,7 @@
     // Build today's lesson from how they feel: tired, okay or great
     build_lesson: ({ mood: m }) => {
       mood = MOODS[m] ? m : "okay";
+      track("checkin_mood", { mood, via: "voice" });
       showReady(MOODS[mood].line);
       return planSummary(lesson, label);
     },
@@ -876,6 +882,8 @@
     if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
     ctx.resume();
     const checkin = moment === "checkin";
+    const began = Date.now();
+    track("coach_started", { moment, mode: coachMode() });
     const variables = {
       opening_line: opening(moment),
       time_of_day: timeOfDay(),
@@ -896,6 +904,7 @@
       await talkWithLento({ moment, variables, tools: coachTools, bubble: $("doneSay"), sloth: $("doneLento"), after: $("doneLento").closest(".lento-big") });
       $("talkAfter").hidden = false;
     }
+    track("coach_ended", { moment, mode: coachMode(), seconds: Math.round((Date.now() - began) / 1000) });
   }
   $("talkIn").onclick = () => chatWithLento("checkin");
   $("talkAfter").onclick = () => chatWithLento("debrief");
