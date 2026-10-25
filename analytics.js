@@ -3,7 +3,7 @@
 // no cookies (it keeps a random id in this browser), no autocapture of what people type.
 // Off until POSTHOG_KEY is set, and always off in tests.
 
-const POSTHOG_KEY = ""; // the project's public API key (starts with phc_), from PostHog > Settings
+const POSTHOG_KEY = "phc_m2tjPoFCsekXuBzw6Qr6F9wYTGMkDDFGvpTqMNLeXwJJ"; // the project's public API key (starts with phc_), from PostHog > Settings
 const POSTHOG_HOST = "https://us.i.posthog.com";
 const FEEDBACK_SURVEY_ID = ""; // the "Lesson feedback" survey's id, from PostHog > Surveys
 
