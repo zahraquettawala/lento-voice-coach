@@ -4,7 +4,7 @@
   "type": "module",
   "description": "Lento, a sloth vocal coach. A static site with no build step; this file is only for tests.",
   "scripts": {
-    "test": "node --test tests/unit.test.js",
+    "test": "node --test tests/unit.test.js tests/coach.test.mjs",
     "smoke": "node tests/smoke.js"
   },
   "devDependencies": {

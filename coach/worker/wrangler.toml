@@ -1,0 +1,19 @@
+name = "lento-coach"
+main = "index.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+ALLOWED_ORIGINS = "https://zahraquettawala.github.io"
+PER_PERSON_DAILY = "6"
+ALL_DAILY = "40"
+DAILY_BUDGET_USD = "3"
+POSTHOG_KEY = ""
+COACH_ON = "on"
+# AGENT_ID is added once Lento's agent exists. The ElevenLabs key is a secret:
+#   npx wrangler secret put ELEVENLABS_API_KEY
+# ElevenLabs' post-call webhook (https://<worker>/webhook) has its own secret:
+#   npx wrangler secret put WEBHOOK_SECRET
+
+[[kv_namespaces]]
+binding = "LIMITS"
+id = "REPLACE_WITH_KV_ID" # from: npx wrangler kv namespace create LIMITS
