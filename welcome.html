@@ -23,6 +23,7 @@
   .skip { font-size: 14px; font-weight: 600; color: var(--ink-3); padding: 6px; }
   .nav { width: 100%; display: flex; align-items: center; gap: 14px; }
 </style>
+<script type="module" src="analytics.js"></script>
 </head>
 <body>
 <main class="scene">
@@ -48,8 +49,8 @@
       voice: "In every lesson, I sing each exercise first. Then it's your turn, and I'll play piano with you." },
     { mood: "proud", text: "I listen while you sing.", sub: "If a note goes flat, sharp or breathy, we'll go over it together until it feels right.",
       voice: "I listen while you sing. If something's a little off, we'll practice it together until it's right." },
-    { mood: "happy", text: "Pop in wired earbuds.", sub: "That way I hear you, not the piano. Nothing is recorded, and your progress stays on this phone.", cta: "Let's sing!",
-      voice: "Pop in your earbuds, and let's sing!" },
+    { mood: "happy", text: "Find a comfy spot.", sub: "Earbuds help me hear you best, but your phone speaker works too. Nothing is recorded, and your progress stays on this phone.", cta: "Let's sing!",
+      voice: "Find a comfy spot, and let's sing!" },
   ];
   let i = 0, ctx, piano;
   $("steps").innerHTML = STEPS.map(() => "<i></i>").join("");
