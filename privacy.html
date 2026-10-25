@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("lentoTheme")||"neutral"}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lento">
+<meta name="theme-color" content="#f6f5f2">
+<title>Your privacy · Lento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<link rel="icon" href="sloth.svg">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+  .head { display: flex; align-items: center; gap: 12px; }
+  .art { width: 96px; height: 116px; margin: 0 auto; }
+  .row .title { font-size: 15px; }
+  .row .meta { font-size: 14px; line-height: 1.45; margin-top: 2px; }
+  .row svg { flex: none; color: var(--accent-ink); align-self: flex-start; margin-top: 2px; }
+  #wipe { width: 100%; }
+</style>
+<script type="module" src="analytics.js"></script>
+</head>
+<body>
+<main class="app">
+  <div class="head">
+    <a class="icon-btn" href="progress.html" aria-label="Back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <div>
+      <div class="eyebrow">Lento</div>
+      <h1>Your privacy</h1>
+    </div>
+  </div>
+
+  <div class="art" data-sloth="happy"></div>
+
+  <div class="list">
+    <div class="row"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+      <span class="grow"><div class="title">Your singing stays on your phone</div><div class="meta">Lento listens to the microphone only while you sing, to measure your pitch. Nothing is recorded, saved or sent anywhere.</div></span></div>
+    <div class="row"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 15l3.5-4 3 2.5L19 8"/></svg>
+      <span class="grow"><div class="title">Your progress stays on your phone</div><div class="meta">Lesson scores, your song and your settings are saved in this browser only. There are no accounts, and nobody else can see them.</div></span></div>
+    <div class="row"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>
+      <span class="grow"><div class="title">Anonymous counts, no ads</div><div class="meta">Lento counts things like visits, finished lessons and errors with PostHog, under a random id, so we can make it better. That never includes your singing or your name. No cookies, no ads. Like any website, the app also loads its fonts from Google Fonts and its pitch detector from jsDelivr.</div></span></div>
+    <div class="row"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+      <span class="grow"><div class="title">Your email, only if you share it</div><div class="meta">If you leave your email with feedback, it's kept with your feedback and lesson counts in PostHog and used only to reply or send Lento news. <a href="feedback.html" style="color: var(--accent-ink); font-weight: 600">Ask</a> and it's deleted.</div></span></div>
+  </div>
+
+  <section class="section">
+    <p class="hint">Want a fresh start? This deletes your lesson history, streak and song from this phone. It can't be undone.</p>
+    <button class="btn ghost" id="wipe">Delete my practice history</button>
+  </section>
+</main>
+
+<script type="module">
+  import { drawSloths } from "./sloth.js";
+  import { tabbar } from "./ui.js";
+
+  // Two taps, so nobody deletes their history by accident
+  const wipe = document.getElementById("wipe");
+  let armed = false;
+  wipe.onclick = () => {
+    if (!armed) { armed = true; wipe.textContent = "Tap again to delete"; return; }
+    try { for (const k of ["lentoSessions", "mariahSessions", "lentoSong"]) localStorage.removeItem(k); } catch {}
+    wipe.textContent = "Deleted";
+    wipe.disabled = true;
+  };
+
+  drawSloths();
+  tabbar("progress");
+</script>
+</body>
+</html>
