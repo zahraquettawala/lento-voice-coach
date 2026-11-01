@@ -1,5 +1,7 @@
-// Lento's speaking voice. Lines recorded with her ElevenLabs voice (Irene) play from
-// voice/; anything not recorded yet falls back to the phone's built-in voice.
+// Lento's speaking voice is Kokoro v1.0 (voice af_heart), free and open source.
+// 1. Lines listed in voice/lines.js play from recordings in voice/, so they start instantly.
+// 2. Anything else is spoken by the same voice running on the phone (voice/kokoro-worker.js).
+// 3. Until that model has downloaded (or if it can't run), the phone's built-in voice steps in.
 
 import { LINES } from "./voice/lines.js";
 
@@ -94,6 +96,66 @@ async function playRecorded(text) {
   return true;
 }
 
+// ---------- Kokoro on the phone ----------
+
+let worker = null, ready = false, nextId = 0;
+const waiting = new Map(); // id -> resolve(AudioBuffer | null)
+const made = new Map();    // normalized text -> Promise<AudioBuffer | null>
+
+// Start downloading the model in the background. Safe to call many times.
+export function warmUp() {
+  if (worker || typeof Worker === "undefined") return;
+  try {
+    worker = new Worker(new URL("voice/kokoro-worker.js", import.meta.url), { type: "module" });
+  } catch { worker = null; return; }
+  worker.onmessage = ({ data }) => {
+    if (data.type === "ready") ready = true;
+    if (data.type === "failed") { ready = false; worker?.terminate(); }
+    if (data.type === "audio") {
+      const done = waiting.get(data.id);
+      waiting.delete(data.id);
+      if (!done) return;
+      if (data.error || !ctx) return done(null);
+      const buffer = ctx.createBuffer(1, data.audio.length, data.rate);
+      buffer.getChannelData(0).set(data.audio);
+      done(buffer);
+    }
+  };
+  worker.onerror = () => { ready = false; };
+  worker.postMessage({ type: "load" });
+}
+
+// Kokoro's audio for a line, made once and kept for repeats
+function generate(text) {
+  const key = normalize(text);
+  if (!made.has(key)) {
+    const p = new Promise((resolve) => {
+      const id = nextId++;
+      waiting.set(id, resolve);
+      worker.postMessage({ type: "say", id, text });
+    });
+    p.then((b) => { if (!b) made.delete(key); });
+    made.set(key, p);
+  }
+  return made.get(key);
+}
+
+// Make a line ahead of time, so it's ready when she says it
+export function prepare(text) {
+  if (ready && ctx && !recordingsFor(text)) generate(text);
+}
+
+// Speaks a line with Kokoro on the phone. Resolves to false if it isn't ready, or takes too
+// long this time (the line is still finished in the background for next time).
+async function playOnDevice(text) {
+  if (!ready || !ctx || ctx.state !== "running") { warmUp(); return false; }
+  const gen = generation;
+  const buffer = await Promise.race([generate(text), new Promise((r) => setTimeout(() => r(null), 6000))]);
+  if (!buffer) return false;
+  if (gen === generation) await playBuffer(buffer);
+  return true;
+}
+
 // ---------- Built-in voice ----------
 
 function utterance(text) {
@@ -123,6 +185,8 @@ export async function speakAndWait(text) {
   hush();
   const gen = generation;
   if (await playRecorded(text)) return;
+  if (gen !== generation) return;
+  if (await playOnDevice(text)) return;
   if (gen === generation) await speakBuiltIn(text);
 }
 
@@ -144,4 +208,5 @@ export function unlock() {
     ctx ??= new (window.AudioContext || window.webkitAudioContext)();
     ctx.resume();
   } catch {}
+  warmUp();
 }

@@ -35,7 +35,13 @@ Pitch detection runs in the browser with [Pitchy](https://github.com/ianprime050
 
 ## Lento's voice
 
-Lento speaks with an ElevenLabs voice (Irene). Her lines were recorded once and ship as audio files in `voice/`, so there's no server, no API key and no cost per use. `voice/lines.js` lists each recorded line and its file; `voice.js` plays the recording when a line matches (two recorded lines in a row work too) and falls back to the phone's built-in voice for anything not recorded yet. To add a line, drop the mp3 in `voice/` and add it to `voice/lines.js`.
+Lento speaks with [Kokoro](https://huggingface.co/hexgrad/Kokoro-82M) v1.0 (voice `af_heart`, speed 0.95), an open-source voice that's free to use (Apache 2.0). There's no server, no API key and no cost per use.
+
+- **Set lines** (57 of them: coaching, feedback, the welcome, and every exercise's introduction) are rendered ahead of time and ship as mp3s in `voice/`, so they play instantly. `voice/lines.js` lists each line and its file; two recorded lines in a row work too.
+- **Lines that change**, like the ones with your song's name in them, are spoken by the same voice running on the phone: `voice/kokoro-worker.js` runs [kokoro-js](https://www.npmjs.com/package/kokoro-js) in a web worker (8-bit model, about 90 MB, downloaded once when you start a lesson and cached after that). The text never leaves the phone. During a lesson, the next song line is made ahead of time while you sing.
+- Until the model has downloaded, or if the phone can't run it, the phone's built-in voice steps in.
+
+To add a set line, add it to `voice/lines.js` and run `python tools/render-voice.py` (setup steps are at the top of that file); it renders only the files that are missing.
 
 ## Usage and feedback
 
@@ -45,10 +51,11 @@ Lento speaks with an ElevenLabs voice (Irene). Her lines were recorded once and 
 
 The app has no build step; `package.json` exists only for tests.
 
-- `npm test` runs the unit tests (`tests/unit.test.js`): lesson building for each mood, note and melody parsing, and checks that every recorded line has its file and still matches what the app says.
+- `npm test` runs the unit tests (`tests/unit.test.js`): lesson building for each mood, note and melody parsing, and checks that every recorded line has its file and still matches what the app says, and that every exercise's introduction is recorded.
+- `npm run kokoro` downloads the real Kokoro model in Chromium and checks the on-phone voice says a line (`tests/kokoro.js`). It needs the internet.
 - `npm run smoke` opens every screen in a phone-sized Chromium with a fake microphone, starts a lesson, and fails on any JavaScript error (`tests/smoke.js`). Add `-- --shots <folder>` to save screenshots.
 
-Both run on every pull request (`.github/workflows/test.yml`).
+All three run on every pull request (`.github/workflows/test.yml`).
 
 Design notes and the redesign plan are in [docs/lento-redesign.md](docs/lento-redesign.md).
 

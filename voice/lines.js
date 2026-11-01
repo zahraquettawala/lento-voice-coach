@@ -1,5 +1,6 @@
-// Lines Lento says in her recorded ElevenLabs voice (Irene), and the file for each.
-// Anything not listed here is spoken by the phone's built-in voice instead.
+// Lines Lento says, and the recording of each in voice/. They're rendered ahead of time with
+// Kokoro (voice af_heart) by tools/render-voice.py, so they play instantly. Anything not listed
+// here is spoken by the same voice running on the phone (voice/kokoro-worker.js).
 export const LINES = {
   "Hi, I'm Lento, your vocal coach. Lento means slow, and that's the idea: slow down, take a breath, and make a little time for singing.": "hi-i-m-lento-your-vocal-coach-lento-means-slow-a.mp3",
   "In every lesson, I sing each exercise first. Then it's your turn, and I'll play piano with you.": "in-every-lesson-i-sing-each-exercise-first-then.mp3",
@@ -21,6 +22,7 @@ export const LINES = {
   "One more time.": "one-more-time.mp3",
   "Once more from the top. Here's your note.": "once-more-from-the-top-here-s-your-note.mp3",
   "Nice work. Tap Start any time.": "nice-work-tap-start-any-time.mp3",
+  "Find a comfy spot, and let's sing!": "find-a-comfy-spot-and-let-s-sing.mp3",
   "Listen to the note…": "listen-to-the-note.mp3",
   "Listening… sing for me.": "listening-sing-for-me.mp3",
   "A little flat, lift it up.": "a-little-flat-lift-it-up.mp3",
@@ -28,4 +30,35 @@ export const LINES = {
   "You're right on it.": "you-re-right-on-it.mp3",
   "That was a bit breathy. Take a deeper breath and support it from your belly.": "that-was-a-bit-breathy-take-a-deeper-breath-and.mp3",
   "That was a bit breathy on the top note. Take a deeper breath and support it from your belly.": "that-was-a-bit-breathy-on-the-top-note-take-a-de.mp3",
+
+  // Introducing each exercise (upNext in lesson.html)
+  "Let's warm up your voice. First, humming fifths.": "let-s-warm-up-your-voice-first-humming-fifths.mp3",
+  "Next warm-up: humming fifths.": "next-warm-up-humming-fifths.mp3",
+  "Humming fifths. Here we go.": "humming-fifths-here-we-go.mp3",
+  "Let's warm up your voice. First, me-me-ma-ma-moo.": "let-s-warm-up-your-voice-first-me-me-ma-ma-moo.mp3",
+  "Next warm-up: me-me-ma-ma-moo.": "next-warm-up-me-me-ma-ma-moo.mp3",
+  "Me-me-ma-ma-moo. Here we go.": "me-me-ma-ma-moo-here-we-go.mp3",
+  "Let's warm up your voice. First, lip trill scale.": "let-s-warm-up-your-voice-first-lip-trill-scale.mp3",
+  "Next warm-up: lip trill scale.": "next-warm-up-lip-trill-scale.mp3",
+  "Lip trill scale. Here we go.": "lip-trill-scale-here-we-go.mp3",
+  "Let's warm up your voice. First, nay fifths.": "let-s-warm-up-your-voice-first-nay-fifths.mp3",
+  "Next warm-up: nay fifths.": "next-warm-up-nay-fifths.mp3",
+  "Nay fifths. Here we go.": "nay-fifths-here-we-go.mp3",
+  "Let's warm up your voice. First, hoo triads.": "let-s-warm-up-your-voice-first-hoo-triads.mp3",
+  "Next warm-up: hoo triads.": "next-warm-up-hoo-triads.mp3",
+  "Hoo triads. Here we go.": "hoo-triads-here-we-go.mp3",
+  "Now some scales. 5-note scale.": "now-some-scales-5-note-scale.mp3",
+  "5-note scale. Here we go.": "5-note-scale-here-we-go.mp3",
+  "Now some scales. Fast runs.": "now-some-scales-fast-runs.mp3",
+  "Fast runs. Here we go.": "fast-runs-here-we-go.mp3",
+  "Now some scales. Ya-ya arpeggio.": "now-some-scales-ya-ya-arpeggio.mp3",
+  "Ya-ya arpeggio. Here we go.": "ya-ya-arpeggio-here-we-go.mp3",
+  "Now some scales. Nine-note scale.": "now-some-scales-nine-note-scale.mp3",
+  "Nine-note scale. Here we go.": "nine-note-scale-here-we-go.mp3",
+  "Now some scales. Oh scale.": "now-some-scales-oh-scale.mp3",
+  "Oh scale. Here we go.": "oh-scale-here-we-go.mp3",
+  "Nice work. Let's cool down with descending hum.": "nice-work-let-s-cool-down-with-descending-hum.mp3",
+  "Descending hum. Here we go.": "descending-hum-here-we-go.mp3",
+  "Nice work. Let's cool down with hoo sighs.": "nice-work-let-s-cool-down-with-hoo-sighs.mp3",
+  "Hoo sighs. Here we go.": "hoo-sighs-here-we-go.mp3",
 };

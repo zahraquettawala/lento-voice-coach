@@ -202,7 +202,7 @@
   import { loadSong } from "./song.js";
   import { saveSession, lastSession } from "./store.js";
   import { drawKeys, keyRange } from "./keys.js";
-  import { speak, speakAndWait, hush, unlock } from "./voice.js";
+  import { speak, speakAndWait, hush, unlock, prepare } from "./voice.js";
   import { sheet } from "./ui.js";
 
   const NOTES = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
@@ -665,6 +665,13 @@
       skipping = false;
       showBlock(i);
       lane = null;
+      // Song lines aren't recorded (they have your song's name in them), so have Lento's
+      // on-phone voice make the next ones while this exercise runs
+      const nb = lesson.blocks[i + 1];
+      if (nb?.section === "Song") {
+        prepare(`Time for your song. ${nb.ex.song}: ${nb.ex.name}.`);
+        if (nb.ex.free) prepare(`Let's sing ${nb.ex.name} from ${nb.ex.song}. Here's your starting note.`);
+      }
       await upNext(b, i === 0);
       const tally = b.ex.free ? await runFreeSong(b, i) : await runExercise(b, i);
       piano.stopAll(); singer.stopAll();

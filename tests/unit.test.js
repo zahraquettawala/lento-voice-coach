@@ -17,11 +17,29 @@ test("every recorded line has its audio file", () => {
   }
 });
 
+// The lines that introduce each exercise, built the same way as upNext in lesson.html
+const intros = new Set(EXERCISES.flatMap((ex) => {
+  const n = ex.name.toLowerCase();
+  return {
+    warmup: [`Let's warm up your voice. First, ${n}.`, `Next warm-up: ${n}.`],
+    scale: [`Now some scales. ${ex.name}.`],
+    cooldown: [`Nice work. Let's cool down with ${n}.`],
+  }[ex.kind].concat(`${ex.name}. Here we go.`);
+}));
+
+test("every exercise's introduction is recorded, so it plays instantly", () => {
+  for (const text of intros) assert.ok(recordingsFor(text), `no recording for "${text}"; add it to voice/lines.js and run tools/render-voice.py`);
+  for (const template of ["Let's warm up your voice. First, ${", "Next warm-up: ${", "Now some scales. ${", "Nice work. Let's cool down with ${", "}. Here we go."]) {
+    assert.ok(app.includes(template), `lesson.html no longer says "${template}"; update the intros here and in voice/lines.js`);
+  }
+});
+
 test("every recorded line is still something the app says", () => {
   // If the app's wording changes, the old recording would quietly stop playing
   const said = normalize(app);
   for (const text of Object.keys(LINES)) {
     if (/breathy|went a little/.test(text)) continue; // built from parts in lesson.html
+    if (intros.has(text)) continue; // checked below
     assert.ok(said.includes(normalize(text)), `"${text}" isn't in the app anymore`);
   }
 });
@@ -34,7 +52,7 @@ test("recorded lines are found, including two joined together", () => {
   assert.equal(recordingsFor("That's your lesson. Really nice work today. I'm proud of you.").length, 1);
 });
 
-test("lines that aren't recorded fall back to the phone's voice", () => {
+test("lines that aren't recorded are left to the voice on the phone", () => {
   assert.equal(recordingsFor("Let's sing Chorus from My Song. Here's your starting note."), null);
   assert.equal(recordingsFor("Listen first. Something new."), null);
   assert.equal(recordingsFor(""), null);
@@ -78,4 +96,12 @@ test("note names and melodies parse", () => {
   assert.equal(parseNote("H2"), null);
   assert.deepEqual(parseMelody("E4 G4:2 -"), [[64, 1], [67, 2], [null, 1]]);
   assert.equal(parseMelody("E4 nope"), null);
+});
+
+test("the recordings and the on-phone voice use the same Kokoro voice and speed", () => {
+  const worker = readFileSync(new URL("voice/kokoro-worker.js", root), "utf8");
+  const render = readFileSync(new URL("tools/render-voice.py", root), "utf8");
+  const pick = (src, re) => src.match(re)?.[1];
+  assert.equal(pick(worker, /VOICE = "(\w+)"/), pick(render, /VOICE, SPEED, LANG = "(\w+)"/));
+  assert.equal(pick(worker, /SPEED = ([\d.]+)/), pick(render, /VOICE, SPEED, LANG = "\w+", ([\d.]+)/));
 });
