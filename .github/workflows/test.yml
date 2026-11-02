@@ -20,6 +20,7 @@ jobs:
       - run: npm test
       - run: npx playwright install --with-deps chromium
       - run: mkdir -p shots && npm run smoke -- --shots shots
+      - run: npm run echo -- --shots shots
       - run: npm run kokoro
       - uses: actions/upload-artifact@v4
         if: always()

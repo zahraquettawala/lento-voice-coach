@@ -25,7 +25,7 @@ Open **https://zahraquettawala.github.io/lento-voice-coach/** on your phone in S
 
 Six looks, picked in lesson settings: Neutral (the default), Sunny, Lemon, Studio, Night and Forest. Add it to your home screen in Safari (Share, then Add to Home Screen) and it opens full screen like an app.
 
-Wear wired earbuds so the mic hears you, not the piano. Within 25 cents of the target counts as on pitch, so vibrato isn't penalized.
+Wired earbuds work best, but the phone speaker works too: the lesson learns how much piano leaks back into the mic (while Lento demos and while the piano gives you your note) and ignores it, so only your voice is scored (`echo.js`, checked by `npm run echo`). Within 25 cents of the target counts as on pitch, so vibrato isn't penalized.
 
 ## Code
 

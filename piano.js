@@ -8,7 +8,7 @@ const LOW = 33, HIGH = 96; // A1 to C7
 
 // One shared output chain per audio context: warmth EQ, then dry + a short room reverb
 const rooms = new WeakMap();
-function roomFor(ctx) {
+function roomFor(ctx, destination) {
   if (rooms.has(ctx)) return rooms.get(ctx);
   const input = ctx.createGain();
   input.gain.value = 3; // the Salamander recordings are quiet; bring them up to the old level
@@ -21,8 +21,8 @@ function roomFor(ctx) {
   const dry = ctx.createGain(), wet = ctx.createGain(), reverb = ctx.createConvolver();
   dry.gain.value = 0.9; wet.gain.value = 0.22;
   reverb.buffer = roomImpulse(ctx, 1.8);
-  soften.connect(dry).connect(ctx.destination);
-  soften.connect(reverb).connect(wet).connect(ctx.destination);
+  soften.connect(dry).connect(destination);
+  soften.connect(reverb).connect(wet).connect(destination);
   rooms.set(ctx, input);
   return input;
 }
@@ -45,11 +45,12 @@ function roomImpulse(ctx, seconds) {
   return ir;
 }
 
-export function createPiano(ctx, baseUrl = "piano/") {
+// `destination` lets the lesson route the piano through a meter, to tell it apart from your voice
+export function createPiano(ctx, baseUrl = "piano/", destination = ctx.destination) {
   const buffers = new Map(); // sample midi -> Promise<AudioBuffer | null>
   const live = new Set();     // notes scheduled or sounding, so stopAll can silence them
   let generation = 0;         // bumped by stopAll so notes still loading never start
-  const output = roomFor(ctx);
+  const output = roomFor(ctx, destination);
 
   function sampleFor(midi) {
     return Math.max(LOW, Math.min(HIGH, Math.round(midi / 3) * 3));

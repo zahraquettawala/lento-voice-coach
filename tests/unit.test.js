@@ -105,3 +105,45 @@ test("the recordings and the on-phone voice use the same Kokoro voice and speed"
   assert.equal(pick(worker, /VOICE = "(\w+)"/), pick(render, /VOICE, SPEED, LANG = "(\w+)"/));
   assert.equal(pick(worker, /SPEED = ([\d.]+)/), pick(render, /VOICE, SPEED, LANG = "\w+", ([\d.]+)/));
 });
+
+// The echo gate: the piano coming back through the speaker isn't your voice
+import { createEchoGate, pitchClassGap } from "../echo.js";
+
+test("pitch distance ignores octaves", () => {
+  assert.equal(Math.abs(pitchClassGap(60, 72)), 0);
+  assert.equal(pitchClassGap(61, 48), 1);
+  assert.equal(pitchClassGap(59, 72), -1);
+});
+
+test("the piano leaking into the mic doesn't count as singing", () => {
+  const gate = createEchoGate();
+  gate.playing(60, 0, 4);
+  // While you listen, the mic hears the piano at a fifth of what's played
+  for (let t = 0; t < 1; t += 1 / 60) gate.measure(t, 0.02, 0.1, false);
+  assert.ok(Math.abs(gate.leak - 0.2) < 1e-9);
+  // Silent: the mic only hears the piano's note
+  const { expected } = gate.measure(1.5, 0.02, 0.1, true);
+  assert.equal(gate.isEcho(1.5, 60, 0.02, expected), true);
+  assert.equal(gate.isEcho(1.5, 72.1, 0.02, expected), true, "an octave off is still the piano");
+  // Singing over it: the mic is much louder than the leak
+  assert.equal(gate.isEcho(1.5, 60, 0.08, expected), false);
+  // A soft note that isn't what the piano is playing is still you
+  assert.equal(gate.isEcho(1.5, 63, 0.02, expected), false);
+  // After the piano stops ringing, nothing is the piano
+  assert.equal(gate.isEcho(6, 60, 0.02, gate.measure(6, 0.02, 0, true).expected), false);
+});
+
+test("with earbuds (no leak) everything you sing counts", () => {
+  const gate = createEchoGate();
+  gate.playing(60, 0, 4);
+  for (let t = 0; t < 1; t += 1 / 60) gate.measure(t, 0.0001, 0.1, false);
+  const { expected } = gate.measure(1.5, 0.01, 0.1, true);
+  assert.equal(gate.isEcho(1.5, 60, 0.01, expected), false);
+});
+
+test("before the leak is measured, nothing is thrown away", () => {
+  const gate = createEchoGate();
+  gate.playing(60, 0, 4);
+  const { expected } = gate.measure(0.5, 0.02, 0.1, true);
+  assert.equal(gate.isEcho(0.5, 60, 0.02, expected), false);
+});
