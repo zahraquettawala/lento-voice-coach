@@ -194,6 +194,11 @@ export function speak(text) {
   speakAndWait(text);
 }
 
+// Whether Lento is talking right now
+export function talking() {
+  return playing.size > 0 || (supported && speechSynthesis.speaking);
+}
+
 export function hush() {
   generation++;
   for (const [src, finish] of playing) { try { src.stop(); } catch {} finish(); }

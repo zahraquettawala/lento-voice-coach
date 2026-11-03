@@ -202,8 +202,9 @@
   import { loadSong } from "./song.js";
   import { saveSession, lastSession } from "./store.js";
   import { drawKeys, keyRange } from "./keys.js";
-  import { speak, speakAndWait, hush, unlock, prepare } from "./voice.js";
+  import { speak, speakAndWait, hush, unlock, prepare, talking } from "./voice.js";
   import { sheet } from "./ui.js";
+  import { createEchoGate, rms } from "./echo.js";
 
   const NOTES = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
   const IN_TUNE_CENTS = 25;
@@ -220,6 +221,8 @@
   const oneOf = (list) => list[Math.floor(Math.random() * list.length)];
 
   let ctx, piano, singer, stream, analyser, detector, buffer, wakeLock;
+  let bus, outMeter, outBuffer;  // everything the app plays goes through `bus`, so we know how loud it is
+  const echo = createEchoGate();  // tells your voice apart from the piano coming back through the speaker
   let running = false, paused = false, skipping = false;
   let pausedMs = 0, pausedAt = 0;
   let mood = "okay";
@@ -368,8 +371,23 @@
   async function ensureAudio() {
     if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
     await ctx.resume();
-    piano ??= createPiano(ctx);
-    if (!singer) { singer = createSinger(ctx); singer.connect(ctx.destination); }
+    if (!bus) {
+      bus = ctx.createGain();
+      bus.connect(ctx.destination);
+      outMeter = ctx.createAnalyser();
+      outMeter.fftSize = 2048;
+      bus.connect(outMeter);
+      outBuffer = new Float32Array(outMeter.fftSize);
+    }
+    if (!piano) {
+      piano = createPiano(ctx, "piano/", bus);
+      const play = piano.play;
+      piano.play = (midi, when = ctx.currentTime, duration = 1.2, volume) => {
+        echo.playing(midi, when, duration);
+        return play(midi, when, duration, volume);
+      };
+    }
+    if (!singer) { singer = createSinger(ctx); singer.connect(bus); }
     if (stream) return true;
     try {
       stream = await navigator.mediaDevices.getUserMedia({
@@ -389,15 +407,23 @@
     return true;
   }
 
-  // The sung pitch, plus whether there was sound with no clear pitch (air in the tone)
-  function readPitch() {
+  // The sung pitch, plus whether there was sound with no clear pitch (air in the tone).
+  // `listening` is false while only the app should be making sound (Lento's demo, the piano
+  // giving you your note): those moments teach the echo gate how much piano the mic picks up.
+  // Anything that's just the piano coming back through the speaker counts as silence.
+  function readPitch(listening = true) {
     analyser.getFloatTimeDomainData(buffer);
-    let sum = 0;
-    for (let i = 0; i < buffer.length; i++) sum += buffer[i] * buffer[i];
-    const loud = 10 * Math.log10(sum / buffer.length + 1e-12) > LOUD_DB;
+    outMeter.getFloatTimeDomainData(outBuffer);
+    const mic = rms(buffer), t = ctx.currentTime;
+    // Lento's speaking voice isn't on the meter, so don't learn from the mic while she talks
+    const { expected } = echo.measure(t, mic, rms(outBuffer), listening || talking());
+    const loud = 20 * Math.log10(mic + 1e-12) > LOUD_DB;
     const [hz, clarity] = detector.findPitch(buffer, ctx.sampleRate);
-    const midi = clarity >= MIN_CLARITY && hz >= MIN_HZ && hz <= MAX_HZ ? midiFromHz(hz) : null;
-    return { midi, airy: loud && midi === null };
+    const heard = clarity >= MIN_CLARITY && hz >= MIN_HZ && hz <= MAX_HZ ? midiFromHz(hz) : null;
+    if (echo.isEcho(t, heard, mic, expected)) return { midi: null, airy: false, echo: true };
+    // Before your turn, Lento talking isn't you singing either
+    if (!listening && talking()) return { midi: null, airy: false, echo: true };
+    return { midi: heard, airy: loud && heard === null };
   }
 
   const live = () => running && !skipping;
@@ -511,12 +537,14 @@
 
     const samples = scored.map(() => []), airy = scored.map(() => 0), seen = scored.map(() => 0);
     const lastEnd = Math.max(...scored.map((e) => e.start + e.beats));
+    const firstSung = Math.min(...scored.map((e) => e.start));
     await frames(t + lastEnd * beat, (now) => {
       const pos = (now - t) / beat;
       lane.pos = pos;
+      // During the demo, and while the piano gives you your note, you're only listening
+      const p = readPitch(listen && pos >= firstSung - 0.25);
       if (!listen) return;
       const i = scored.findIndex((e) => pos >= e.start && pos < e.start + e.beats);
-      const p = readPitch();
       lane.voice.push({ beat: pos, midi: p.midi, target: i >= 0 ? scored[i].midi : null });
       // Skip the first part of each note while the voice moves onto it
       if (i >= 0 && (pos - scored[i].start) / scored[i].beats > 0.3) {
@@ -607,7 +635,7 @@
       lane = { events: [], beats: ex.seconds, key: root, voice: [], results: null, pos: null, lit: root };
       $("keyPill").textContent = `Start on ${label(root)}`;
       $("loopInfo").textContent = `${pass + 1} of ${b.keys.length}`;
-      await wait(2.8);
+      await frames(ctx.currentTime + 2.8, () => readPitch(false)); // learn the leak from the starting note
       coach("Sing it through. I'm listening.", { mood: "happy", phase: YOU });
       const start = ctx.currentTime;
       await frames(start + ex.seconds, (now) => {
@@ -807,7 +835,7 @@
   $("end").onclick = () => { if (running) { skip(); running = false; } };
 
   // For automated tests: ?debug exposes what the lane is showing
-  if (new URLSearchParams(location.search).has("debug")) window.lento = { get lane() { return lane; } };
+  if (new URLSearchParams(location.search).has("debug")) window.lento = { get lane() { return lane; }, get leak() { return echo.leak; }, get bus() { return bus; } };
 
   renderMoods();
   if (only) { $("steps").hidden = true; $("shuffle").hidden = true; showReady(`${only.name}: ${only.desc}.`); }

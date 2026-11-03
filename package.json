@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node --test tests/unit.test.js",
     "smoke": "node tests/smoke.js",
-    "kokoro": "node tests/kokoro.js"
+    "kokoro": "node tests/kokoro.js",
+    "echo": "node tests/echo.js"
   },
   "devDependencies": {
     "playwright": "1.63.0"
